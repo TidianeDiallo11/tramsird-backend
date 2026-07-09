@@ -35,6 +35,9 @@ body {
   align-items: center;
   justify-content: center;
 }
+.login-screen[hidden] {
+  display: none;
+}
 .login-box {
   width: 100%;
   max-width: 340px;
@@ -103,6 +106,9 @@ input:focus, textarea:focus, select:focus {
   display: grid;
   grid-template-columns: 220px 1fr;
   min-height: 100vh;
+}
+.app[hidden] {
+  display: none;
 }
 .sidebar {
   border-right: 1px solid var(--border);
