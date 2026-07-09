@@ -177,6 +177,7 @@ function openProductModal(id) {
     document.getElementById("product-form").reset();
     document.getElementById("product-id").value = "";
     document.getElementById("product-active").checked = true;
+    document.getElementById("product-active").checked = true;
   }
 
   modal.hidden = false;
@@ -340,5 +341,46 @@ document.getElementById("save-content-btn").addEventListener("click", async () =
     setTimeout(() => { msg.hidden = true; }, 3000);
   } catch (err) {
     alert(err.message);
+  }
+});
+
+document.getElementById("account-btn").addEventListener("click", () => {
+  document.getElementById("password-form").reset();
+  document.getElementById("password-error").hidden = true;
+  document.getElementById("password-success").hidden = true;
+  document.getElementById("account-modal").hidden = false;
+});
+
+document.getElementById("account-cancel-btn").addEventListener("click", () => {
+  document.getElementById("account-modal").hidden = true;
+});
+
+document.getElementById("password-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const errorEl = document.getElementById("password-error");
+  const successEl = document.getElementById("password-success");
+  errorEl.hidden = true;
+  successEl.hidden = true;
+
+  const currentPassword = document.getElementById("current-password").value;
+  const newPassword = document.getElementById("new-password").value;
+  const confirmPassword = document.getElementById("confirm-password").value;
+
+  if (newPassword !== confirmPassword) {
+    errorEl.textContent = "Les deux nouveaux mots de passe ne correspondent pas.";
+    errorEl.hidden = false;
+    return;
+  }
+
+  try {
+    await apiFetch("/auth/password", {
+      method: "PUT",
+      body: JSON.stringify({ currentPassword, newPassword }),
+    });
+    successEl.hidden = false;
+    document.getElementById("password-form").reset();
+  } catch (err) {
+    errorEl.textContent = err.message;
+    errorEl.hidden = false;
   }
 });

@@ -36,6 +36,7 @@
       <button class="nav-item" data-view="orders">Commandes</button>
       <button class="nav-item" data-view="content">Contenu du site</button>
     </nav>
+    <button id="account-btn" class="btn-secondary" style="margin-bottom: 0.5rem;">Mon compte</button>
     <button id="logout-btn" class="btn-logout">Se deconnecter</button>
   </aside>
 
@@ -205,6 +206,29 @@
       <button class="btn-primary" id="order-status-save-btn">Mettre a jour</button>
       <button class="btn-secondary" id="order-modal-close-btn">Fermer</button>
     </div>
+  </div>
+</div>
+
+<div id="account-modal" class="modal-overlay" hidden>
+  <div class="modal">
+    <h3>Mon compte</h3>
+    <form id="password-form">
+      <label>Mot de passe actuel
+        <input type="password" id="current-password" required autocomplete="current-password" />
+      </label>
+      <label>Nouveau mot de passe (8 caracteres minimum)
+        <input type="password" id="new-password" required minlength="8" autocomplete="new-password" />
+      </label>
+      <label>Confirmer le nouveau mot de passe
+        <input type="password" id="confirm-password" required minlength="8" autocomplete="new-password" />
+      </label>
+      <p id="password-error" class="error-text" hidden></p>
+      <p id="password-success" class="saved-msg" hidden>Mot de passe modifie avec succes</p>
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" id="account-cancel-btn">Fermer</button>
+        <button type="submit" class="btn-primary">Changer le mot de passe</button>
+      </div>
+    </form>
   </div>
 </div>
 
