@@ -169,6 +169,7 @@ function openProductModal(id) {
     document.getElementById("product-description").value = p.description || "";
     document.getElementById("product-price").value = p.price;
     document.getElementById("product-stock").value = p.stock;
+    document.getElementById("product-image-url").value = p.image_url || "";
     document.getElementById("product-sizes").value = (p.sizes || []).join(",");
     document.getElementById("product-colors").value = (p.colors || []).map((c) => `${c.name}:${c.hex}`).join(",");
     document.getElementById("product-active").checked = !!p.active;
@@ -177,12 +178,32 @@ function openProductModal(id) {
     document.getElementById("product-form").reset();
     document.getElementById("product-id").value = "";
     document.getElementById("product-active").checked = true;
-    document.getElementById("product-active").checked = true;
   }
 
+  updateImagePreview();
   modal.hidden = false;
 }
 
+function updateImagePreview() {
+  const url = document.getElementById("product-image-url").value.trim();
+  const wrap = document.getElementById("product-image-preview-wrap");
+  const img = document.getElementById("product-image-preview");
+  if (url) {
+    img.src = url;
+    wrap.hidden = false;
+  } else {
+    wrap.hidden = true;
+    img.src = "";
+  }
+}
+
+document.getElementById("product-image-url").addEventListener("input", updateImagePreview);
+document.getElementById("product-image-preview").addEventListener("error", () => {
+  document.getElementById("product-image-preview-wrap").hidden = true;
+});
+document.getElementById("product-image-preview").addEventListener("load", () => {
+  document.getElementById("product-image-preview-wrap").hidden = false;
+});
 document.getElementById("new-product-btn").addEventListener("click", () => openProductModal(null));
 document.getElementById("product-cancel-btn").addEventListener("click", () => {
   document.getElementById("product-modal").hidden = true;
@@ -209,6 +230,7 @@ document.getElementById("product-form").addEventListener("submit", async (e) => 
     description: document.getElementById("product-description").value,
     price: Number(document.getElementById("product-price").value),
     stock: Number(document.getElementById("product-stock").value),
+    image_url: document.getElementById("product-image-url").value.trim() || null,
     sizes,
     colors,
     active: document.getElementById("product-active").checked,

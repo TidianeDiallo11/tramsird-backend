@@ -177,6 +177,12 @@
       <label>Description <textarea id="product-description" rows="3"></textarea></label>
       <label>Prix (FCFA) <input type="number" id="product-price" required min="0" /></label>
       <label>Stock <input type="number" id="product-stock" required min="0" /></label>
+      <label>URL de l'image
+        <input type="url" id="product-image-url" placeholder="https://i.imgur.com/exemple.jpg" />
+      </label>
+      <div id="product-image-preview-wrap" hidden>
+        <img id="product-image-preview" alt="Apercu du produit" style="width:100%;max-height:180px;object-fit:cover;border-radius:3px;margin:-0.5rem 0 1rem;border:1px solid var(--border-light);" />
+      </div>
       <label>Tailles (separees par virgule) <input type="text" id="product-sizes" placeholder="S,M,L,XL" /></label>
       <label>Couleurs (nom:hex, separees par virgule) <input type="text" id="product-colors" placeholder="Terracotta:#C4562B,Noir:#141110" /></label>
       <label class="checkbox-label">
