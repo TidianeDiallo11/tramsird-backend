@@ -4,8 +4,6 @@ const { requireAuth } = require("../middleware/auth");
 
 const router = express.Router();
 
-// GET /api/content → tous les textes du site, sous forme d'objet { key: value }
-// Utilisé par le site vitrine au chargement.
 router.get("/", (req, res) => {
   const rows = db.prepare("SELECT key, value FROM site_content").all();
   const content = {};
@@ -13,12 +11,10 @@ router.get("/", (req, res) => {
   res.json(content);
 });
 
-// PUT /api/content → met à jour un ou plusieurs textes en une fois
-// Body attendu : { "home_title_line1": "PORTE", "footer_text": "..." , ... }
 router.put("/", requireAuth, (req, res) => {
   const updates = req.body;
   if (!updates || typeof updates !== "object" || Array.isArray(updates)) {
-    return res.status(400).json({ error: "Format invalide : un objet clé/valeur est attendu." });
+    return res.status(400).json({ error: "Format invalide : un objet cle/valeur est attendu." });
   }
 
   const upsert = db.prepare(`

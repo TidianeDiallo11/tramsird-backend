@@ -29,7 +29,6 @@ body {
   margin: 0;
 }
 
-/* --- LOGIN --- */
 .login-screen {
   min-height: 100vh;
   display: flex;
@@ -100,7 +99,6 @@ input:focus, textarea:focus, select:focus {
   margin: -0.5rem 0 1rem;
 }
 
-/* --- APP LAYOUT --- */
 .app {
   display: grid;
   grid-template-columns: 220px 1fr;
@@ -148,7 +146,6 @@ input:focus, textarea:focus, select:focus {
 .view-header h2 { margin: 0; }
 .view-header select { width: auto; }
 
-/* --- STATS --- */
 .stat-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -181,7 +178,6 @@ input:focus, textarea:focus, select:focus {
 }
 .panel h3 { margin: 0 0 1rem; font-size: 1rem; }
 
-/* --- TABLE --- */
 .table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
 .table th {
   text-align: left;
@@ -216,7 +212,6 @@ input:focus, textarea:focus, select:focus {
 #low-stock-list { margin: 0; padding-left: 1.25rem; font-family: 'Space Mono', monospace; font-size: 0.8rem; }
 #low-stock-list li { margin-bottom: 0.35rem; color: var(--mustard); }
 
-/* --- MODAL --- */
 .modal-overlay {
   position: fixed; inset: 0;
   background: rgba(0,0,0,0.6);
@@ -242,7 +237,6 @@ input:focus, textarea:focus, select:focus {
 #order-detail-content { font-family: 'Space Mono', monospace; font-size: 0.8rem; line-height: 1.6; }
 #order-detail-content .order-line { display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); padding: 0.4rem 0; }
 
-/* --- CONTENT / APERÇU --- */
 .content-help {
   color: var(--text-dim);
   font-size: 0.85rem;
@@ -326,4 +320,4 @@ input:focus, textarea:focus, select:focus {
   .sidebar { flex-direction: row; align-items: center; padding: 1rem; }
   .sidebar nav { flex-direction: row; margin-top: 0; overflow-x: auto; }
   .main { padding: 1.25rem; }
-  }
+}

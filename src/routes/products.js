@@ -14,34 +14,22 @@ function parseProduct(row) {
   };
 }
 
-// -----------------------------------------------------------------
-// PUBLIC — utilisé par le site vitrine
-// -----------------------------------------------------------------
-
-// GET /api/products  → liste des produits actifs uniquement
 router.get("/", (req, res) => {
   const rows = db.prepare("SELECT * FROM products WHERE active = 1 ORDER BY created_at DESC").all();
   res.json(rows.map(parseProduct));
 });
 
-// GET /api/products/:id
 router.get("/:id", (req, res) => {
   const row = db.prepare("SELECT * FROM products WHERE id = ?").get(req.params.id);
   if (!row) return res.status(404).json({ error: "Produit introuvable." });
   res.json(parseProduct(row));
 });
 
-// -----------------------------------------------------------------
-// ADMIN — protégé par authentification
-// -----------------------------------------------------------------
-
-// GET /api/products/admin/all → liste complète, y compris produits masqués
 router.get("/admin/all", requireAuth, (req, res) => {
   const rows = db.prepare("SELECT * FROM products ORDER BY created_at DESC").all();
   res.json(rows.map(parseProduct));
 });
 
-// POST /api/products → créer un produit
 router.post("/", requireAuth, (req, res) => {
   const { name, tagline, description, price, colors, sizes, stock, image_url, active } = req.body;
 
@@ -70,7 +58,6 @@ router.post("/", requireAuth, (req, res) => {
   res.status(201).json(parseProduct(created));
 });
 
-// PUT /api/products/:id → modifier un produit
 router.put("/:id", requireAuth, (req, res) => {
   const existing = db.prepare("SELECT * FROM products WHERE id = ?").get(req.params.id);
   if (!existing) return res.status(404).json({ error: "Produit introuvable." });
@@ -109,7 +96,6 @@ router.put("/:id", requireAuth, (req, res) => {
   res.json(parseProduct(updated));
 });
 
-// DELETE /api/products/:id
 router.delete("/:id", requireAuth, (req, res) => {
   const existing = db.prepare("SELECT * FROM products WHERE id = ?").get(req.params.id);
   if (!existing) return res.status(404).json({ error: "Produit introuvable." });

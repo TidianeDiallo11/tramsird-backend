@@ -4,7 +4,6 @@ const bcrypt = require("bcryptjs");
 const db = require("./init");
 
 function seed() {
-  // --- Compte admin ---
   const adminEmail = process.env.ADMIN_EMAIL || "admin@tramsird.com";
   const adminPassword = process.env.ADMIN_PASSWORD || "changeme123";
 
@@ -16,12 +15,11 @@ function seed() {
       adminEmail,
       hash
     );
-    console.log(`✔ Compte admin créé : ${adminEmail}`);
+    console.log(`Compte admin cree : ${adminEmail}`);
   } else {
-    console.log(`— Compte admin déjà existant : ${adminEmail}`);
+    console.log(`Compte admin deja existant : ${adminEmail}`);
   }
 
-  // --- Produit initial ---
   const existingProduct = db.prepare("SELECT id FROM products LIMIT 1").get();
   if (!existingProduct) {
     db.prepare(`
@@ -30,8 +28,8 @@ function seed() {
     `).run(
       "trm-001",
       "Hoodie Sahel",
-      "Motif wax brodé, coupe oversize",
-      "Le Hoodie Sahel est taillé dans un molleton épais 380g, avec une bande brodée inspirée des motifs wax sur la manche gauche. Coupe oversize, capuche doublée, poche kangourou renforcée.",
+      "Motif wax brode, coupe oversize",
+      "Le Hoodie Sahel est taille dans un molleton epais 380g, avec une bande brodee inspiree des motifs wax sur la manche gauche. Coupe oversize, capuche doublee, poche kangourou renforcee.",
       28000,
       JSON.stringify([
         { name: "Terracotta", hex: "#C4562B" },
@@ -42,28 +40,27 @@ function seed() {
       14,
       null
     );
-    console.log("✔ Produit initial créé : Hoodie Sahel");
+    console.log("Produit initial cree : Hoodie Sahel");
   } else {
-    console.log("— Des produits existent déjà, seed produit ignoré");
+    console.log("Des produits existent deja, seed produit ignore");
   }
 
-  // --- Contenu texte du site (valeurs par défaut, modifiables ensuite depuis l'admin) ---
   const defaultContent = {
-    home_eyebrow: "DROP N°01 — COLLECTION SAHEL",
+    home_eyebrow: "DROP N1 - COLLECTION SAHEL",
     home_title_line1: "PORTE",
     home_title_line2: "TON",
-    home_title_line3: "HÉRITAGE",
-    home_subtitle: "Tramsird habille la rue avec des coupes larges et des motifs puisés dans le wax. Fabriqué en petites séries, pensé pour durer.",
+    home_title_line3: "HERITAGE",
+    home_subtitle: "Tramsird habille la rue avec des coupes larges et des motifs puises dans le wax. Fabrique en petites series, pense pour durer.",
     collection_heading: "LA COLLECTION",
-    feature_1_label: "01 — MATIÈRE",
-    feature_1_text: "Molleton 380g, brodé main",
-    feature_2_label: "02 — LIVRAISON",
-    feature_2_text: "Expédié sous 48h, suivi inclus",
-    feature_3_label: "03 — PAIEMENT",
+    feature_1_label: "01 - MATIERE",
+    feature_1_text: "Molleton 380g, brode main",
+    feature_2_label: "02 - LIVRAISON",
+    feature_2_text: "Expedie sous 48h, suivi inclus",
+    feature_3_label: "03 - PAIEMENT",
     feature_3_text: "Carte bancaire ou Orange Money",
-    footer_text: "© 2026 Tramsird — Fabriqué avec fierté",
-    success_title: "COMMANDE CONFIRMÉE",
-    success_text: "Un e-mail de confirmation te sera envoyé. Ta commande part vers toi sous 48h.",
+    footer_text: "2026 Tramsird - Fabrique avec fierte",
+    success_title: "COMMANDE CONFIRMEE",
+    success_text: "Un e-mail de confirmation te sera envoye. Ta commande part vers toi sous 48h.",
   };
 
   const insertContent = db.prepare(
@@ -75,8 +72,8 @@ function seed() {
     }
   });
   insertMany(Object.entries(defaultContent));
-  console.log("✔ Contenu texte du site initialisé (ou déjà existant)");
+  console.log("Contenu texte du site initialise");
 }
 
 seed();
-console.log("Terminé.");
+console.log("Termine.");

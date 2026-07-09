@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Tramsird — Administration</title>
+<title>Tramsird - Administration</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css" />
@@ -36,28 +36,26 @@
       <button class="nav-item" data-view="orders">Commandes</button>
       <button class="nav-item" data-view="content">Contenu du site</button>
     </nav>
-    <button id="logout-btn" class="btn-logout">Se déconnecter</button>
+    <button id="logout-btn" class="btn-logout">Se deconnecter</button>
   </aside>
 
   <main class="main">
-    <!-- DASHBOARD -->
     <section id="view-dashboard" class="view">
       <h2>Tableau de bord</h2>
       <div class="stat-grid" id="stat-grid"></div>
       <div class="panel">
-        <h3>Commandes récentes</h3>
+        <h3>Commandes recentes</h3>
         <table class="table" id="recent-orders-table">
           <thead><tr><th>Client</th><th>Total</th><th>Paiement</th><th>Statut</th><th>Date</th></tr></thead>
           <tbody></tbody>
         </table>
       </div>
       <div class="panel" id="low-stock-panel" hidden>
-        <h3>⚠ Stock faible</h3>
+        <h3>Stock faible</h3>
         <ul id="low-stock-list"></ul>
       </div>
     </section>
 
-    <!-- PRODUCTS -->
     <section id="view-products" class="view" hidden>
       <div class="view-header">
         <h2>Produits</h2>
@@ -69,17 +67,16 @@
       </table>
     </section>
 
-    <!-- ORDERS -->
     <section id="view-orders" class="view" hidden>
       <div class="view-header">
         <h2>Commandes</h2>
         <select id="order-filter">
           <option value="">Toutes</option>
           <option value="new">Nouvelles</option>
-          <option value="processing">En préparation</option>
-          <option value="shipped">Expédiées</option>
-          <option value="delivered">Livrées</option>
-          <option value="cancelled">Annulées</option>
+          <option value="processing">En preparation</option>
+          <option value="shipped">Expediees</option>
+          <option value="delivered">Livrees</option>
+          <option value="cancelled">Annulees</option>
         </select>
       </div>
       <table class="table" id="orders-table">
@@ -88,32 +85,31 @@
       </table>
     </section>
 
-    <!-- CONTENT -->
     <section id="view-content" class="view" hidden>
       <div class="view-header">
         <h2>Contenu du site</h2>
         <button class="btn-primary" id="save-content-btn">Enregistrer les modifications</button>
       </div>
-      <p class="content-help">Modifie les textes ci-dessous : ils changeront directement sur ton site public dès l'enregistrement.</p>
-      <p id="content-saved-msg" class="saved-msg" hidden>✔ Modifications enregistrées</p>
+      <p class="content-help">Modifie les textes ci-dessous : ils changeront directement sur ton site public des l'enregistrement.</p>
+      <p id="content-saved-msg" class="saved-msg" hidden>Modifications enregistrees</p>
 
       <div class="content-grid">
         <form id="content-form">
           <div class="content-block">
-            <h3>Page d'accueil — bandeau principal</h3>
-            <label>Petite étiquette au-dessus du titre
+            <h3>Page d'accueil - bandeau principal</h3>
+            <label>Petite etiquette au-dessus du titre
               <input type="text" data-key="home_eyebrow" />
             </label>
-            <label>Titre — ligne 1
+            <label>Titre - ligne 1
               <input type="text" data-key="home_title_line1" />
             </label>
-            <label>Titre — ligne 2
+            <label>Titre - ligne 2
               <input type="text" data-key="home_title_line2" />
             </label>
-            <label>Titre — ligne 3 (couleur accent)
+            <label>Titre - ligne 3 (couleur accent)
               <input type="text" data-key="home_title_line3" />
             </label>
-            <label>Texte de présentation
+            <label>Texte de presentation
               <textarea rows="3" data-key="home_subtitle"></textarea>
             </label>
           </div>
@@ -127,11 +123,11 @@
 
           <div class="content-block">
             <h3>Les 3 points forts</h3>
-            <label>Étiquette 1 <input type="text" data-key="feature_1_label" /></label>
+            <label>Etiquette 1 <input type="text" data-key="feature_1_label" /></label>
             <label>Texte 1 <input type="text" data-key="feature_1_text" /></label>
-            <label>Étiquette 2 <input type="text" data-key="feature_2_label" /></label>
+            <label>Etiquette 2 <input type="text" data-key="feature_2_label" /></label>
             <label>Texte 2 <input type="text" data-key="feature_2_text" /></label>
-            <label>Étiquette 3 <input type="text" data-key="feature_3_label" /></label>
+            <label>Etiquette 3 <input type="text" data-key="feature_3_label" /></label>
             <label>Texte 3 <input type="text" data-key="feature_3_text" /></label>
           </div>
 
@@ -154,7 +150,7 @@
         </form>
 
         <div class="preview-panel">
-          <p class="preview-label">APERÇU EN DIRECT</p>
+          <p class="preview-label">APERCU EN DIRECT</p>
           <div class="preview-mock">
             <p class="preview-eyebrow" id="preview-eyebrow"></p>
             <h1 class="preview-title">
@@ -170,7 +166,6 @@
   </main>
 </div>
 
-<!-- Modal produit (création / édition) -->
 <div id="product-modal" class="modal-overlay" hidden>
   <div class="modal">
     <h3 id="product-modal-title">Nouveau produit</h3>
@@ -181,8 +176,8 @@
       <label>Description <textarea id="product-description" rows="3"></textarea></label>
       <label>Prix (FCFA) <input type="number" id="product-price" required min="0" /></label>
       <label>Stock <input type="number" id="product-stock" required min="0" /></label>
-      <label>Tailles (séparées par virgule) <input type="text" id="product-sizes" placeholder="S,M,L,XL" /></label>
-      <label>Couleurs (nom:hex, séparées par virgule) <input type="text" id="product-colors" placeholder="Terracotta:#C4562B,Noir:#141110" /></label>
+      <label>Tailles (separees par virgule) <input type="text" id="product-sizes" placeholder="S,M,L,XL" /></label>
+      <label>Couleurs (nom:hex, separees par virgule) <input type="text" id="product-colors" placeholder="Terracotta:#C4562B,Noir:#141110" /></label>
       <label class="checkbox-label">
         <input type="checkbox" id="product-active" checked /> Visible sur le site
       </label>
@@ -197,17 +192,17 @@
 
 <div id="order-modal" class="modal-overlay" hidden>
   <div class="modal">
-    <h3>Détail de la commande</h3>
+    <h3>Detail de la commande</h3>
     <div id="order-detail-content"></div>
     <div class="modal-actions">
       <select id="order-status-select">
         <option value="new">Nouvelle</option>
-        <option value="processing">En préparation</option>
-        <option value="shipped">Expédiée</option>
-        <option value="delivered">Livrée</option>
-        <option value="cancelled">Annulée</option>
+        <option value="processing">En preparation</option>
+        <option value="shipped">Expediee</option>
+        <option value="delivered">Livree</option>
+        <option value="cancelled">Annulee</option>
       </select>
-      <button class="btn-primary" id="order-status-save-btn">Mettre à jour</button>
+      <button class="btn-primary" id="order-status-save-btn">Mettre a jour</button>
       <button class="btn-secondary" id="order-modal-close-btn">Fermer</button>
     </div>
   </div>
@@ -215,4 +210,4 @@
 
 <script src="app.js"></script>
 </body>
-  </html>
+</html>

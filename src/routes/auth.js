@@ -5,7 +5,6 @@ const db = require("../db/init");
 
 const router = express.Router();
 
-// POST /api/auth/login
 router.post("/login", (req, res) => {
   const { email, password } = req.body;
 
@@ -28,11 +27,10 @@ router.post("/login", (req, res) => {
   res.json({ token, email: admin.email });
 });
 
-// GET /api/auth/me  (vérifie que le token en cours est toujours valide)
 router.get("/me", (req, res) => {
   const header = req.headers.authorization || "";
   const token = header.startsWith("Bearer ") ? header.slice(7) : null;
-  if (!token) return res.status(401).json({ error: "Non authentifié." });
+  if (!token) return res.status(401).json({ error: "Non authentifie." });
 
   try {
     const payload = jwt.verify(token, process.env.JWT_SECRET);

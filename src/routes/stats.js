@@ -4,7 +4,6 @@ const { requireAuth } = require("../middleware/auth");
 
 const router = express.Router();
 
-// GET /api/stats/dashboard → chiffres clés pour l'écran d'accueil admin
 router.get("/dashboard", requireAuth, (req, res) => {
   const totalRevenue = db.prepare(
     "SELECT COALESCE(SUM(total), 0) as sum FROM orders WHERE payment_status = 'paid'"

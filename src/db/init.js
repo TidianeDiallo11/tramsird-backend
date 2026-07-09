@@ -13,12 +13,12 @@ CREATE TABLE IF NOT EXISTS products (
   name TEXT NOT NULL,
   tagline TEXT,
   description TEXT,
-  price INTEGER NOT NULL,           -- prix en FCFA (entier, unité de base)
-  colors TEXT NOT NULL DEFAULT '[]', -- JSON: [{"name":"Terracotta","hex":"#C4562B"}]
-  sizes TEXT NOT NULL DEFAULT '[]',  -- JSON: ["S","M","L","XL"]
+  price INTEGER NOT NULL,
+  colors TEXT NOT NULL DEFAULT '[]',
+  sizes TEXT NOT NULL DEFAULT '[]',
   stock INTEGER NOT NULL DEFAULT 0,
   image_url TEXT,
-  active INTEGER NOT NULL DEFAULT 1, -- 1 = visible sur le site, 0 = masqué
+  active INTEGER NOT NULL DEFAULT 1,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
@@ -29,15 +29,15 @@ CREATE TABLE IF NOT EXISTS orders (
   customer_email TEXT NOT NULL,
   customer_phone TEXT,
   shipping_address TEXT,
-  items TEXT NOT NULL,              -- JSON: [{"product_id","name","color","size","qty","unit_price"}]
+  items TEXT NOT NULL,
   subtotal INTEGER NOT NULL,
   shipping_fee INTEGER NOT NULL DEFAULT 0,
   total INTEGER NOT NULL,
   currency TEXT NOT NULL DEFAULT 'XOF',
-  payment_method TEXT,              -- 'card' | 'orange_money'
-  payment_status TEXT NOT NULL DEFAULT 'pending', -- pending | paid | failed | cancelled
+  payment_method TEXT,
+  payment_status TEXT NOT NULL DEFAULT 'pending',
   cinetpay_transaction_id TEXT,
-  status TEXT NOT NULL DEFAULT 'new', -- new | processing | shipped | delivered | cancelled
+  status TEXT NOT NULL DEFAULT 'new',
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
@@ -49,8 +49,6 @@ CREATE TABLE IF NOT EXISTS admins (
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
--- Stocke tous les textes modifiables du site (titre d'accueil, slogans, blocs, pied de page...)
--- Une ligne = un texte, identifié par une clé stable (ex: "home_title").
 CREATE TABLE IF NOT EXISTS site_content (
   key TEXT PRIMARY KEY,
   value TEXT NOT NULL,

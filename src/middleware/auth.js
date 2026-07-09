@@ -13,7 +13,7 @@ function requireAuth(req, res, next) {
     req.admin = payload;
     next();
   } catch (err) {
-    return res.status(401).json({ error: "Session invalide ou expirée, reconnecte-toi." });
+    return res.status(401).json({ error: "Session invalide ou expiree, reconnecte-toi." });
   }
 }
 

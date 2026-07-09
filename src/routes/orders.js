@@ -10,11 +10,6 @@ function parseOrder(row) {
   return { ...row, items: JSON.parse(row.items || "[]") };
 }
 
-// -----------------------------------------------------------------
-// PUBLIC — créée par le site vitrine au moment du checkout
-// -----------------------------------------------------------------
-
-// POST /api/orders → crée la commande (statut "pending") + retourne le lien de paiement CinetPay
 router.post("/", async (req, res) => {
   const {
     customerName, customerEmail, customerPhone, shippingAddress,
@@ -25,8 +20,6 @@ router.post("/", async (req, res) => {
     return res.status(400).json({ error: "Informations client ou panier manquants." });
   }
 
-  // Recalcule les prix côté serveur à partir de la base — ne jamais faire confiance
-  // aux prix envoyés par le navigateur.
   let subtotal = 0;
   const verifiedItems = [];
   for (const item of items) {
@@ -82,31 +75,25 @@ router.post("/", async (req, res) => {
       customerName,
       customerEmail,
       customerPhone,
-      description: `Commande Tramsird #${orderId.slice(0, 8)}`,
+      description: `Commande Tramsird`,
     });
 
     res.status(201).json({ orderId, paymentUrl, total, currency: currency || "XOF" });
   } catch (err) {
     console.error("Erreur initiation CinetPay:", err.message);
     res.status(502).json({
-      error: "Impossible de contacter le service de paiement pour le moment. Réessaie dans un instant.",
+      error: "Impossible de contacter le service de paiement pour le moment. Reessaie dans un instant.",
       orderId,
     });
   }
 });
 
-// GET /api/orders/:id → suivi d'une commande (utilisé par la page de confirmation)
 router.get("/:id", (req, res) => {
   const row = db.prepare("SELECT * FROM orders WHERE id = ?").get(req.params.id);
   if (!row) return res.status(404).json({ error: "Commande introuvable." });
   res.json(parseOrder(row));
 });
 
-// -----------------------------------------------------------------
-// ADMIN — protégé
-// -----------------------------------------------------------------
-
-// GET /api/orders → liste toutes les commandes (avec filtres optionnels)
 router.get("/", requireAuth, (req, res) => {
   const { status, payment_status } = req.query;
   let query = "SELECT * FROM orders WHERE 1=1";
@@ -126,7 +113,6 @@ router.get("/", requireAuth, (req, res) => {
   res.json(rows.map(parseOrder));
 });
 
-// PUT /api/orders/:id/status → mettre à jour le statut logistique (processing/shipped/delivered/cancelled)
 router.put("/:id/status", requireAuth, (req, res) => {
   const { status } = req.body;
   const validStatuses = ["new", "processing", "shipped", "delivered", "cancelled"];

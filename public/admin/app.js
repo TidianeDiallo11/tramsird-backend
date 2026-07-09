@@ -1,8 +1,5 @@
 const API_BASE = "/api";
 
-// ---------------------------------------------------------------------------
-// UTILITAIRES
-// ---------------------------------------------------------------------------
 function getToken() { return localStorage.getItem("tramsird_admin_token"); }
 function setToken(t) { localStorage.setItem("tramsird_admin_token", t); }
 function clearToken() { localStorage.removeItem("tramsird_admin_token"); }
@@ -16,7 +13,7 @@ async function apiFetch(path, options = {}) {
   if (res.status === 401) {
     clearToken();
     showLogin();
-    throw new Error("Session expirée.");
+    throw new Error("Session expiree.");
   }
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.error || "Erreur inconnue.");
@@ -33,9 +30,6 @@ function statusBadge(status) {
   return `<span class="badge badge-${status}">${status}</span>`;
 }
 
-// ---------------------------------------------------------------------------
-// AUTH / ÉCRANS
-// ---------------------------------------------------------------------------
 function showLogin() {
   document.getElementById("login-screen").hidden = false;
   document.getElementById("app").hidden = true;
@@ -71,7 +65,6 @@ document.getElementById("logout-btn").addEventListener("click", () => {
   showLogin();
 });
 
-// Vérifie si une session existe déjà au chargement
 (async function init() {
   if (getToken()) {
     try {
@@ -85,9 +78,6 @@ document.getElementById("logout-btn").addEventListener("click", () => {
   }
 })();
 
-// ---------------------------------------------------------------------------
-// NAVIGATION
-// ---------------------------------------------------------------------------
 document.querySelectorAll(".nav-item").forEach((btn) => {
   btn.addEventListener("click", () => {
     document.querySelectorAll(".nav-item").forEach((b) => b.classList.remove("active"));
@@ -102,16 +92,13 @@ document.querySelectorAll(".nav-item").forEach((btn) => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// DASHBOARD
-// ---------------------------------------------------------------------------
 async function loadDashboard() {
   try {
     const data = await apiFetch("/stats/dashboard");
 
     document.getElementById("stat-grid").innerHTML = `
       <div class="stat-card"><p class="stat-label">CHIFFRE D'AFFAIRES</p><p class="stat-value">${formatFCFA(data.totalRevenue)}</p></div>
-      <div class="stat-card"><p class="stat-label">COMMANDES PAYÉES</p><p class="stat-value">${data.paidOrdersCount}</p></div>
+      <div class="stat-card"><p class="stat-label">COMMANDES PAYEES</p><p class="stat-value">${data.paidOrdersCount}</p></div>
       <div class="stat-card"><p class="stat-label">EN ATTENTE</p><p class="stat-value">${data.pendingOrdersCount}</p></div>
     `;
 
@@ -130,7 +117,7 @@ async function loadDashboard() {
     if (data.lowStockProducts.length > 0) {
       lowStockPanel.hidden = false;
       document.getElementById("low-stock-list").innerHTML = data.lowStockProducts
-        .map((p) => `<li>${p.name} — ${p.stock} restant(s)</li>`)
+        .map((p) => `<li>${p.name} - ${p.stock} restant(s)</li>`)
         .join("");
     } else {
       lowStockPanel.hidden = true;
@@ -140,9 +127,6 @@ async function loadDashboard() {
   }
 }
 
-// ---------------------------------------------------------------------------
-// PRODUITS
-// ---------------------------------------------------------------------------
 let productsCache = [];
 
 async function loadProducts() {
@@ -154,7 +138,7 @@ async function loadProducts() {
         <td>${p.name}</td>
         <td>${formatFCFA(p.price)}</td>
         <td>${p.stock}</td>
-        <td>${p.active ? '<span class="badge badge-paid">visible</span>' : '<span class="badge badge-cancelled">masqué</span>'}</td>
+        <td>${p.active ? '<span class="badge badge-paid">visible</span>' : '<span class="badge badge-cancelled">masque</span>'}</td>
         <td><button class="btn-secondary edit-product-btn" data-id="${p.id}">Modifier</button></td>
       </tr>
     `).join("") || `<tr><td colspan="5">Aucun produit. Clique sur "Nouveau produit" pour commencer.</td></tr>`;
@@ -243,9 +227,6 @@ document.getElementById("product-form").addEventListener("submit", async (e) => 
   }
 });
 
-// ---------------------------------------------------------------------------
-// COMMANDES
-// ---------------------------------------------------------------------------
 let ordersCache = [];
 let selectedOrderId = null;
 
@@ -284,4 +265,80 @@ function openOrderModal(id) {
   const content = document.getElementById("order-detail-content");
   content.innerHTML = `
     <div class="order-line"><span>Client</span><span>${order.customer_name}</span></div>
-    <div class="order-line"><span>Email</span><span>${order.customer_
+    <div class="order-line"><span>Email</span><span>${order.customer_email}</span></div>
+    <div class="order-line"><span>Telephone</span><span>${order.customer_phone || "-"}</span></div>
+    <div class="order-line"><span>Adresse</span><span>${order.shipping_address || "-"}</span></div>
+    <div class="order-line"><span>Paiement</span><span>${order.payment_method || "-"} (${order.payment_status})</span></div>
+    <div class="order-line"><span>Total</span><span>${formatFCFA(order.total)}</span></div>
+    <br/>
+    ${order.items.map((i) => `
+      <div class="order-line"><span>${i.name} - ${i.color}, ${i.size} x${i.qty}</span><span>${formatFCFA(i.unit_price * i.qty)}</span></div>
+    `).join("")}
+  `;
+
+  document.getElementById("order-status-select").value = order.status;
+  document.getElementById("order-modal").hidden = false;
+}
+
+document.getElementById("order-modal-close-btn").addEventListener("click", () => {
+  document.getElementById("order-modal").hidden = true;
+});
+
+document.getElementById("order-status-save-btn").addEventListener("click", async () => {
+  const status = document.getElementById("order-status-select").value;
+  try {
+    await apiFetch(`/orders/${selectedOrderId}/status`, {
+      method: "PUT",
+      body: JSON.stringify({ status }),
+    });
+    document.getElementById("order-modal").hidden = true;
+    loadOrders();
+  } catch (err) {
+    alert(err.message);
+  }
+});
+
+async function loadContent() {
+  try {
+    const content = await apiFetch("/content");
+    document.querySelectorAll("#content-form [data-key]").forEach((el) => {
+      const key = el.dataset.key;
+      if (content[key] !== undefined) el.value = content[key];
+    });
+    updatePreview();
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+function updatePreview() {
+  const get = (key) => {
+    const el = document.querySelector(`#content-form [data-key="${key}"]`);
+    return el ? el.value : "";
+  };
+  document.getElementById("preview-eyebrow").textContent = get("home_eyebrow");
+  document.getElementById("preview-line1").textContent = get("home_title_line1");
+  document.getElementById("preview-line2").textContent = get("home_title_line2");
+  document.getElementById("preview-line3").textContent = get("home_title_line3");
+  document.getElementById("preview-subtitle").textContent = get("home_subtitle");
+}
+
+document.querySelectorAll("#content-form [data-key]").forEach((el) => {
+  el.addEventListener("input", updatePreview);
+});
+
+document.getElementById("save-content-btn").addEventListener("click", async () => {
+  const payload = {};
+  document.querySelectorAll("#content-form [data-key]").forEach((el) => {
+    payload[el.dataset.key] = el.value;
+  });
+
+  try {
+    await apiFetch("/content", { method: "PUT", body: JSON.stringify(payload) });
+    const msg = document.getElementById("content-saved-msg");
+    msg.hidden = false;
+    setTimeout(() => { msg.hidden = true; }, 3000);
+  } catch (err) {
+    alert(err.message);
+  }
+});

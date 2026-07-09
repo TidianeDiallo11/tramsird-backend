@@ -4,10 +4,6 @@ const { checkPaymentStatus } = require("../services/cinetpay");
 
 const router = express.Router();
 
-// POST /api/payments/webhook
-// Appelé automatiquement par CinetPay quand un paiement est terminé (réussi ou échoué).
-// On ne fait JAMAIS confiance au contenu brut du webhook : on revérifie toujours
-// le statut réel auprès de CinetPay via checkPaymentStatus avant de valider quoi que ce soit.
 router.post("/webhook", async (req, res) => {
   const transactionId = req.body.cpm_trans_id || req.body.transaction_id;
 
@@ -17,11 +13,10 @@ router.post("/webhook", async (req, res) => {
 
   const order = db.prepare("SELECT * FROM orders WHERE id = ?").get(transactionId);
   if (!order) {
-    console.warn(`Webhook reçu pour une commande inconnue : ${transactionId}`);
+    console.warn(`Webhook recu pour une commande inconnue : ${transactionId}`);
     return res.status(404).json({ error: "Commande introuvable." });
   }
 
-  // Évite de traiter deux fois le même paiement (webhook parfois envoyé plusieurs fois)
   if (order.payment_status === "paid") {
     return res.status(200).json({ ok: true, alreadyProcessed: true });
   }
@@ -30,7 +25,6 @@ router.post("/webhook", async (req, res) => {
     const result = await checkPaymentStatus(transactionId);
 
     if (result.status === "ACCEPTED") {
-      // Décrémente le stock pour chaque article de la commande
       const items = JSON.parse(order.items);
       const decrementStock = db.prepare(
         "UPDATE products SET stock = MAX(0, stock - ?) WHERE id = ?"
@@ -55,26 +49,21 @@ router.post("/webhook", async (req, res) => {
       });
       tx();
 
-      console.log(`✔ Paiement confirmé pour commande ${order.id}`);
+      console.log(`Paiement confirme pour commande ${order.id}`);
     } else {
       db.prepare(`
         UPDATE orders SET payment_status = 'failed', updated_at = datetime('now') WHERE id = ?
       `).run(order.id);
-      console.log(`✘ Paiement refusé/échoué pour commande ${order.id}`);
+      console.log(`Paiement refuse/echoue pour commande ${order.id}`);
     }
 
     res.status(200).json({ ok: true });
   } catch (err) {
-    console.error("Erreur vérification paiement:", err.message);
-    // On répond quand même 200 pour éviter que CinetPay ne renvoie le webhook en boucle,
-    // mais rien n'a été validé côté commande — elle reste 'pending' pour vérif manuelle.
-    res.status(200).json({ ok: false, error: "Vérification échouée, à contrôler manuellement." });
+    console.error("Erreur verification paiement:", err.message);
+    res.status(200).json({ ok: false, error: "Verification echouee, a controler manuellement." });
   }
 });
 
-// GET /api/payments/status/:orderId
-// Utilisé par la page de confirmation du site pour afficher l'état réel au client
-// (poll toutes les quelques secondes le temps que le webhook arrive).
 router.get("/status/:orderId", async (req, res) => {
   const order = db.prepare("SELECT payment_status, status FROM orders WHERE id = ?").get(req.params.orderId);
   if (!order) return res.status(404).json({ error: "Commande introuvable." });
