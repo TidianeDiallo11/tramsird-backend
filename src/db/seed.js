@@ -61,6 +61,10 @@ function seed() {
     footer_text: "2026 Tramsird - Fabrique avec fierte",
     success_title: "COMMANDE CONFIRMEE",
     success_text: "Un e-mail de confirmation te sera envoye. Ta commande part vers toi sous 48h.",
+    about_heading: "A PROPOS",
+    about_text: "Tramsird est ne d'une envie simple : porter fierement son heritage africain dans un vetement pense pour la rue d'aujourd'hui. Chaque piece est concue en petite serie, en melant coupes streetwear et motifs puises dans le wax. Fabrique avec soin, pense pour durer.",
+    social_instagram: "",
+    social_tiktok: "",
   };
 
   const insertContent = db.prepare(
