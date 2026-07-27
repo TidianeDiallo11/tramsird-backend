@@ -28,7 +28,7 @@ router.post("/", async (req, res) => {
   let subtotal = 0;
   const verifiedItems = [];
   for (const item of items) {
-    const product = db.prepare("SELECT * FROM products WHERE id = ? AND active = 1").get(item.productId);
+    const product = await db.one("SELECT * FROM products WHERE id = $1 AND active = 1", [item.productId]);
     if (!product) {
       return res.status(400).json({ error: `Produit introuvable : ${item.productId}` });
     }
@@ -51,26 +51,24 @@ router.post("/", async (req, res) => {
   const total = subtotal + shippingFee;
   const orderId = uuidv4();
 
-  db.prepare(`
-    INSERT INTO orders (
+  await db.query(
+    `INSERT INTO orders (
       id, customer_name, customer_email, customer_phone, shipping_address,
       items, subtotal, shipping_fee, total, currency, payment_status, status
-    ) VALUES (
-      @id, @customerName, @customerEmail, @customerPhone, @shippingAddress,
-      @items, @subtotal, @shippingFee, @total, @currency, 'pending', 'new'
-    )
-  `).run({
-    id: orderId,
-    customerName,
-    customerEmail,
-    customerPhone: customerPhone || "",
-    shippingAddress: shippingAddress || "",
-    items: JSON.stringify(verifiedItems),
-    subtotal,
-    shippingFee,
-    total,
-    currency: currency || "XOF",
-  });
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'pending', 'new')`,
+    [
+      orderId,
+      customerName,
+      customerEmail,
+      customerPhone || "",
+      shippingAddress || "",
+      JSON.stringify(verifiedItems),
+      subtotal,
+      shippingFee,
+      total,
+      currency || "XOF",
+    ]
+  );
 
   try {
     if (paymentMethod === "paypal") {
@@ -83,9 +81,10 @@ router.post("/", async (req, res) => {
         cancelUrl: `${process.env.PUBLIC_SITE_URL}/commande/${orderId}?cancelled=1`,
       });
 
-      db.prepare(
-        "UPDATE orders SET payment_provider = 'paypal', paypal_order_id = ? WHERE id = ?"
-      ).run(paypalOrderId, orderId);
+      await db.query(
+        "UPDATE orders SET payment_provider = 'paypal', paypal_order_id = $1 WHERE id = $2",
+        [paypalOrderId, orderId]
+      );
 
       return res.status(201).json({ orderId, paymentUrl: approveUrl, total, currency: currency || "XOF" });
     }
@@ -102,7 +101,7 @@ router.post("/", async (req, res) => {
       channels,
     });
 
-    db.prepare("UPDATE orders SET payment_provider = 'cinetpay' WHERE id = ?").run(orderId);
+    await db.query("UPDATE orders SET payment_provider = 'cinetpay' WHERE id = $1", [orderId]);
 
     res.status(201).json({ orderId, paymentUrl, total, currency: currency || "XOF" });
   } catch (err) {
@@ -114,45 +113,45 @@ router.post("/", async (req, res) => {
   }
 });
 
-router.get("/:id", (req, res) => {
-  const row = db.prepare("SELECT * FROM orders WHERE id = ?").get(req.params.id);
+router.get("/:id", async (req, res) => {
+  const row = await db.one("SELECT * FROM orders WHERE id = $1", [req.params.id]);
   if (!row) return res.status(404).json({ error: "Commande introuvable." });
   res.json(parseOrder(row));
 });
 
-router.get("/", requireAuth, (req, res) => {
+router.get("/", requireAuth, async (req, res) => {
   const { status, payment_status } = req.query;
   let query = "SELECT * FROM orders WHERE 1=1";
-  const params = {};
+  const params = [];
 
   if (status) {
-    query += " AND status = @status";
-    params.status = status;
+    params.push(status);
+    query += ` AND status = $${params.length}`;
   }
   if (payment_status) {
-    query += " AND payment_status = @payment_status";
-    params.payment_status = payment_status;
+    params.push(payment_status);
+    query += ` AND payment_status = $${params.length}`;
   }
   query += " ORDER BY created_at DESC";
 
-  const rows = db.prepare(query).all(params);
+  const rows = await db.query(query, params);
   res.json(rows.map(parseOrder));
 });
 
-router.put("/:id/status", requireAuth, (req, res) => {
+router.put("/:id/status", requireAuth, async (req, res) => {
   const { status } = req.body;
   const validStatuses = ["new", "processing", "shipped", "delivered", "cancelled"];
   if (!validStatuses.includes(status)) {
     return res.status(400).json({ error: "Statut invalide." });
   }
 
-  const existing = db.prepare("SELECT * FROM orders WHERE id = ?").get(req.params.id);
+  const existing = await db.one("SELECT * FROM orders WHERE id = $1", [req.params.id]);
   if (!existing) return res.status(404).json({ error: "Commande introuvable." });
 
-  db.prepare("UPDATE orders SET status = ?, updated_at = datetime('now') WHERE id = ?").run(
+  await db.query("UPDATE orders SET status = $1, updated_at = now() WHERE id = $2", [
     status,
-    req.params.id
-  );
+    req.params.id,
+  ]);
 
   res.json({ success: true });
 });

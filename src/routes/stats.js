@@ -4,41 +4,41 @@ const { requireAuth } = require("../middleware/auth");
 
 const router = express.Router();
 
-router.get("/dashboard", requireAuth, (req, res) => {
-  const totalRevenue = db.prepare(
-    "SELECT COALESCE(SUM(total), 0) as sum FROM orders WHERE payment_status = 'paid'"
-  ).get().sum;
+router.get("/dashboard", requireAuth, async (req, res) => {
+  const totalRevenue = (await db.one(
+    "SELECT COALESCE(SUM(total), 0)::int as sum FROM orders WHERE payment_status = 'paid'"
+  )).sum;
 
-  const paidOrdersCount = db.prepare(
-    "SELECT COUNT(*) as count FROM orders WHERE payment_status = 'paid'"
-  ).get().count;
+  const paidOrdersCount = (await db.one(
+    "SELECT COUNT(*)::int as count FROM orders WHERE payment_status = 'paid'"
+  )).count;
 
-  const pendingOrdersCount = db.prepare(
-    "SELECT COUNT(*) as count FROM orders WHERE payment_status = 'pending'"
-  ).get().count;
+  const pendingOrdersCount = (await db.one(
+    "SELECT COUNT(*)::int as count FROM orders WHERE payment_status = 'pending'"
+  )).count;
 
-  const last7DaysRevenue = db.prepare(`
-    SELECT date(created_at) as day, COALESCE(SUM(total), 0) as revenue
+  const last7DaysRevenue = await db.query(`
+    SELECT date_trunc('day', created_at) as day, COALESCE(SUM(total), 0)::int as revenue
     FROM orders
-    WHERE payment_status = 'paid' AND created_at >= datetime('now', '-7 days')
+    WHERE payment_status = 'paid' AND created_at >= now() - interval '7 days'
     GROUP BY day
     ORDER BY day ASC
-  `).all();
+  `);
 
-  const lowStockProducts = db.prepare(
+  const lowStockProducts = await db.query(
     "SELECT id, name, stock FROM products WHERE active = 1 AND stock <= 3 ORDER BY stock ASC"
-  ).all();
+  );
 
-  const paymentMethodBreakdown = db.prepare(`
-    SELECT payment_method, COUNT(*) as count
+  const paymentMethodBreakdown = await db.query(`
+    SELECT payment_method, COUNT(*)::int as count
     FROM orders
     WHERE payment_status = 'paid' AND payment_method IS NOT NULL
     GROUP BY payment_method
-  `).all();
+  `);
 
-  const recentOrders = db.prepare(
+  const recentOrders = await db.query(
     "SELECT id, customer_name, total, currency, payment_status, status, created_at FROM orders ORDER BY created_at DESC LIMIT 8"
-  ).all();
+  );
 
   res.json({
     totalRevenue,

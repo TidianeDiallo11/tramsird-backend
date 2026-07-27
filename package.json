@@ -1,17 +1,16 @@
 {
   "name": "tramsird-backend",
   "version": "1.0.0",
-  "description": "Backend e-commerce Tramsird - produits, commandes, paiement CinetPay (carte + Orange Money) et PayPal",
+  "description": "Backend e-commerce Tramsird - produits, commandes, paiement CinetPay (carte + Orange Money) et PayPal, base Postgres persistante",
   "main": "src/server.js",
   "type": "commonjs",
   "scripts": {
     "start": "node src/server.js",
-    "dev": "node --watch src/server.js",
-    "seed": "node src/db/seed.js"
+    "dev": "node --watch src/server.js"
   },
   "dependencies": {
     "express": "^4.19.2",
-    "better-sqlite3": "^11.3.0",
+    "pg": "^8.13.0",
     "bcryptjs": "^2.4.3",
     "jsonwebtoken": "^9.0.2",
     "cors": "^2.8.5",

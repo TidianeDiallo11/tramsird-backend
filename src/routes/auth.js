@@ -6,14 +6,14 @@ const { requireAuth } = require("../middleware/auth");
 
 const router = express.Router();
 
-router.post("/login", (req, res) => {
+router.post("/login", async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
     return res.status(400).json({ error: "Email et mot de passe requis." });
   }
 
-  const admin = db.prepare("SELECT * FROM admins WHERE email = ?").get(email.toLowerCase().trim());
+  const admin = await db.one("SELECT * FROM admins WHERE email = $1", [email.toLowerCase().trim()]);
 
   if (!admin || !bcrypt.compareSync(password, admin.password_hash)) {
     return res.status(401).json({ error: "Identifiants incorrects." });
@@ -41,7 +41,7 @@ router.get("/me", (req, res) => {
   }
 });
 
-router.put("/password", requireAuth, (req, res) => {
+router.put("/password", requireAuth, async (req, res) => {
   const { currentPassword, newPassword } = req.body;
 
   if (!currentPassword || !newPassword) {
@@ -52,7 +52,7 @@ router.put("/password", requireAuth, (req, res) => {
     return res.status(400).json({ error: "Le nouveau mot de passe doit contenir au moins 8 caracteres." });
   }
 
-  const admin = db.prepare("SELECT * FROM admins WHERE id = ?").get(req.admin.id);
+  const admin = await db.one("SELECT * FROM admins WHERE id = $1", [req.admin.id]);
   if (!admin) {
     return res.status(404).json({ error: "Compte introuvable." });
   }
@@ -62,7 +62,7 @@ router.put("/password", requireAuth, (req, res) => {
   }
 
   const newHash = bcrypt.hashSync(newPassword, 10);
-  db.prepare("UPDATE admins SET password_hash = ? WHERE id = ?").run(newHash, admin.id);
+  await db.query("UPDATE admins SET password_hash = $1 WHERE id = $2", [newHash, admin.id]);
 
   res.json({ success: true });
 });
