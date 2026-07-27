@@ -1,7 +1,12 @@
 const Database = require("better-sqlite3");
+const fs = require("fs");
 const path = require("path");
 
-const dbPath = path.join(__dirname, "..", "..", "tramsird.db");
+// DATABASE_PATH doit pointer vers un volume persistant (ex: /data/tramsird.db sur Railway) :
+// sans ca, la base est stockee dans le systeme de fichiers ephemere du conteneur et
+// repart de zero (reseed) a chaque redeploiement.
+const dbPath = process.env.DATABASE_PATH || path.join(__dirname, "..", "..", "tramsird.db");
+fs.mkdirSync(path.dirname(dbPath), { recursive: true });
 const db = new Database(dbPath);
 
 db.pragma("journal_mode = WAL");
