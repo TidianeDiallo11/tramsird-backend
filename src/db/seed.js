@@ -1,44 +1,44 @@
-require("dotenv").config();
 const { v4: uuidv4 } = require("uuid");
 const bcrypt = require("bcryptjs");
 const db = require("./init");
 
-function seed() {
+async function seed() {
   const adminEmail = process.env.ADMIN_EMAIL || "admin@tramsird.com";
   const adminPassword = process.env.ADMIN_PASSWORD || "changeme123";
 
-  const existingAdmin = db.prepare("SELECT id FROM admins WHERE email = ?").get(adminEmail);
+  const existingAdmin = await db.one("SELECT id FROM admins WHERE email = $1", [adminEmail]);
   if (!existingAdmin) {
     const hash = bcrypt.hashSync(adminPassword, 10);
-    db.prepare("INSERT INTO admins (id, email, password_hash) VALUES (?, ?, ?)").run(
+    await db.query("INSERT INTO admins (id, email, password_hash) VALUES ($1, $2, $3)", [
       uuidv4(),
       adminEmail,
-      hash
-    );
+      hash,
+    ]);
     console.log(`Compte admin cree : ${adminEmail}`);
   } else {
     console.log(`Compte admin deja existant : ${adminEmail}`);
   }
 
-  const existingProduct = db.prepare("SELECT id FROM products LIMIT 1").get();
+  const existingProduct = await db.one("SELECT id FROM products LIMIT 1");
   if (!existingProduct) {
-    db.prepare(`
-      INSERT INTO products (id, name, tagline, description, price, colors, sizes, stock, image_url, active)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
-    `).run(
-      "trm-001",
-      "Hoodie Sahel",
-      "Motif wax brode, coupe oversize",
-      "Le Hoodie Sahel est taille dans un molleton epais 380g, avec une bande brodee inspiree des motifs wax sur la manche gauche. Coupe oversize, capuche doublee, poche kangourou renforcee.",
-      28000,
-      JSON.stringify([
-        { name: "Terracotta", hex: "#C4562B" },
-        { name: "Noir", hex: "#141110" },
-        { name: "Moutarde", hex: "#E8A33D" },
-      ]),
-      JSON.stringify(["S", "M", "L", "XL", "XXL"]),
-      14,
-      null
+    await db.query(
+      `INSERT INTO products (id, name, tagline, description, price, colors, sizes, stock, image_url, active)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 1)`,
+      [
+        "trm-001",
+        "Hoodie Sahel",
+        "Motif wax brode, coupe oversize",
+        "Le Hoodie Sahel est taille dans un molleton epais 380g, avec une bande brodee inspiree des motifs wax sur la manche gauche. Coupe oversize, capuche doublee, poche kangourou renforcee.",
+        28000,
+        JSON.stringify([
+          { name: "Terracotta", hex: "#C4562B" },
+          { name: "Noir", hex: "#141110" },
+          { name: "Moutarde", hex: "#E8A33D" },
+        ]),
+        JSON.stringify(["S", "M", "L", "XL", "XXL"]),
+        14,
+        null,
+      ]
     );
     console.log("Produit initial cree : Hoodie Sahel");
   } else {
@@ -57,7 +57,7 @@ function seed() {
     feature_2_label: "02 - LIVRAISON",
     feature_2_text: "Expedie sous 48h, suivi inclus",
     feature_3_label: "03 - PAIEMENT",
-    feature_3_text: "Carte bancaire ou Orange Money",
+    feature_3_text: "Carte bancaire, PayPal ou Orange Money",
     footer_text: "2026 Tramsird - Fabrique avec fierte",
     success_title: "COMMANDE CONFIRMEE",
     success_text: "Un e-mail de confirmation te sera envoye. Ta commande part vers toi sous 48h.",
@@ -67,17 +67,13 @@ function seed() {
     social_tiktok: "",
   };
 
-  const insertContent = db.prepare(
-    "INSERT OR IGNORE INTO site_content (key, value) VALUES (@key, @value)"
-  );
-  const insertMany = db.transaction((entries) => {
-    for (const [key, value] of entries) {
-      insertContent.run({ key, value });
-    }
-  });
-  insertMany(Object.entries(defaultContent));
+  for (const [key, value] of Object.entries(defaultContent)) {
+    await db.query(
+      "INSERT INTO site_content (key, value) VALUES ($1, $2) ON CONFLICT (key) DO NOTHING",
+      [key, value]
+    );
+  }
   console.log("Contenu texte du site initialise");
 }
 
-seed();
-console.log("Termine.");
+module.exports = seed;

@@ -2,7 +2,7 @@ const axios = require("axios");
 
 const CINETPAY_BASE_URL = "https://api-checkout.cinetpay.com/v2";
 
-async function initiatePayment({ orderId, amount, currency, customerName, customerEmail, customerPhone, description }) {
+async function initiatePayment({ orderId, amount, currency, customerName, customerEmail, customerPhone, description, channels }) {
   const payload = {
     apikey: process.env.CINETPAY_API_KEY,
     site_id: process.env.CINETPAY_SITE_ID,
@@ -15,7 +15,7 @@ async function initiatePayment({ orderId, amount, currency, customerName, custom
     customer_phone_number: customerPhone || "",
     notify_url: `${process.env.PUBLIC_BACKEND_URL}/api/payments/webhook`,
     return_url: `${process.env.PUBLIC_SITE_URL}/commande/${orderId}`,
-    channels: "ALL",
+    channels: channels || "ALL",
     lang: "fr",
   };
 

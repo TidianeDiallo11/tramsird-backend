@@ -14,23 +14,23 @@ function parseProduct(row) {
   };
 }
 
-router.get("/", (req, res) => {
-  const rows = db.prepare("SELECT * FROM products WHERE active = 1 ORDER BY created_at DESC").all();
+router.get("/", async (req, res) => {
+  const rows = await db.query("SELECT * FROM products WHERE active = 1 ORDER BY created_at DESC");
   res.json(rows.map(parseProduct));
 });
 
-router.get("/:id", (req, res) => {
-  const row = db.prepare("SELECT * FROM products WHERE id = ?").get(req.params.id);
+router.get("/admin/all", requireAuth, async (req, res) => {
+  const rows = await db.query("SELECT * FROM products ORDER BY created_at DESC");
+  res.json(rows.map(parseProduct));
+});
+
+router.get("/:id", async (req, res) => {
+  const row = await db.one("SELECT * FROM products WHERE id = $1", [req.params.id]);
   if (!row) return res.status(404).json({ error: "Produit introuvable." });
   res.json(parseProduct(row));
 });
 
-router.get("/admin/all", requireAuth, (req, res) => {
-  const rows = db.prepare("SELECT * FROM products ORDER BY created_at DESC").all();
-  res.json(rows.map(parseProduct));
-});
-
-router.post("/", requireAuth, (req, res) => {
+router.post("/", requireAuth, async (req, res) => {
   const { name, tagline, description, price, colors, sizes, stock, image_url, active } = req.body;
 
   if (!name || price == null) {
@@ -38,69 +38,71 @@ router.post("/", requireAuth, (req, res) => {
   }
 
   const id = uuidv4();
-  db.prepare(`
-    INSERT INTO products (id, name, tagline, description, price, colors, sizes, stock, image_url, active)
-    VALUES (@id, @name, @tagline, @description, @price, @colors, @sizes, @stock, @image_url, @active)
-  `).run({
-    id,
-    name,
-    tagline: tagline || "",
-    description: description || "",
-    price: Math.round(price),
-    colors: JSON.stringify(colors || []),
-    sizes: JSON.stringify(sizes || []),
-    stock: stock ?? 0,
-    image_url: image_url || null,
-    active: active === false ? 0 : 1,
-  });
+  await db.query(
+    `INSERT INTO products (id, name, tagline, description, price, colors, sizes, stock, image_url, active)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+    [
+      id,
+      name,
+      tagline || "",
+      description || "",
+      Math.round(price),
+      JSON.stringify(colors || []),
+      JSON.stringify(sizes || []),
+      stock ?? 0,
+      image_url || null,
+      active === false ? 0 : 1,
+    ]
+  );
 
-  const created = db.prepare("SELECT * FROM products WHERE id = ?").get(id);
+  const created = await db.one("SELECT * FROM products WHERE id = $1", [id]);
   res.status(201).json(parseProduct(created));
 });
 
-router.put("/:id", requireAuth, (req, res) => {
-  const existing = db.prepare("SELECT * FROM products WHERE id = ?").get(req.params.id);
+router.put("/:id", requireAuth, async (req, res) => {
+  const existing = await db.one("SELECT * FROM products WHERE id = $1", [req.params.id]);
   if (!existing) return res.status(404).json({ error: "Produit introuvable." });
 
   const {
     name, tagline, description, price, colors, sizes, stock, image_url, active,
   } = req.body;
 
-  db.prepare(`
-    UPDATE products SET
-      name = @name,
-      tagline = @tagline,
-      description = @description,
-      price = @price,
-      colors = @colors,
-      sizes = @sizes,
-      stock = @stock,
-      image_url = @image_url,
-      active = @active,
-      updated_at = datetime('now')
-    WHERE id = @id
-  `).run({
-    id: req.params.id,
-    name: name ?? existing.name,
-    tagline: tagline ?? existing.tagline,
-    description: description ?? existing.description,
-    price: price != null ? Math.round(price) : existing.price,
-    colors: colors ? JSON.stringify(colors) : existing.colors,
-    sizes: sizes ? JSON.stringify(sizes) : existing.sizes,
-    stock: stock ?? existing.stock,
-    image_url: image_url !== undefined ? image_url : existing.image_url,
-    active: active === undefined ? existing.active : (active ? 1 : 0),
-  });
+  await db.query(
+    `UPDATE products SET
+      name = $1,
+      tagline = $2,
+      description = $3,
+      price = $4,
+      colors = $5,
+      sizes = $6,
+      stock = $7,
+      image_url = $8,
+      active = $9,
+      updated_at = now()
+    WHERE id = $10`,
+    [
+      name ?? existing.name,
+      tagline ?? existing.tagline,
+      description ?? existing.description,
+      price != null ? Math.round(price) : existing.price,
+      colors ? JSON.stringify(colors) : existing.colors,
+      sizes ? JSON.stringify(sizes) : existing.sizes,
+      stock ?? existing.stock,
+      image_url !== undefined ? image_url : existing.image_url,
+      active === undefined ? existing.active : (active ? 1 : 0),
+      req.params.id,
+    ]
+  );
 
-  const updated = db.prepare("SELECT * FROM products WHERE id = ?").get(req.params.id);
+  const updated = await db.one("SELECT * FROM products WHERE id = $1", [req.params.id]);
   res.json(parseProduct(updated));
 });
 
-router.delete("/:id", requireAuth, (req, res) => {
-  const existing = db.prepare("SELECT * FROM products WHERE id = ?").get(req.params.id);
+router.delete("/:id", requireAuth, async (req, res) => {
+  const existing = await db.one("SELECT * FROM products WHERE id = $1", [req.params.id]);
   if (!existing) return res.status(404).json({ error: "Produit introuvable." });
 
-  db.prepare("DELETE FROM products WHERE id = ?").run(req.params.id);
+  await db.query("DELETE FROM products WHERE id = $1", [req.params.id]);
   res.json({ success: true });
 });
 
