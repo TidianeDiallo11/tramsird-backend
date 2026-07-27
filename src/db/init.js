@@ -60,4 +60,12 @@ CREATE INDEX IF NOT EXISTS idx_orders_created ON orders(created_at);
 CREATE INDEX IF NOT EXISTS idx_products_active ON products(active);
 `);
 
+const existingOrderColumns = db.prepare("PRAGMA table_info(orders)").all().map((c) => c.name);
+if (!existingOrderColumns.includes("payment_provider")) {
+  db.exec("ALTER TABLE orders ADD COLUMN payment_provider TEXT");
+}
+if (!existingOrderColumns.includes("paypal_order_id")) {
+  db.exec("ALTER TABLE orders ADD COLUMN paypal_order_id TEXT");
+}
+
 module.exports = db;

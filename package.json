@@ -1,7 +1,7 @@
 {
   "name": "tramsird-backend",
   "version": "1.0.0",
-  "description": "Backend e-commerce Tramsird - produits, commandes, paiement CinetPay (carte + Orange Money)",
+  "description": "Backend e-commerce Tramsird - produits, commandes, paiement CinetPay (carte + Orange Money) et PayPal",
   "main": "src/server.js",
   "type": "commonjs",
   "scripts": {

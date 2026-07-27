@@ -3,8 +3,13 @@ const { v4: uuidv4 } = require("uuid");
 const db = require("../db/init");
 const { requireAuth } = require("../middleware/auth");
 const { initiatePayment } = require("../services/cinetpay");
+const paypalService = require("../services/paypal");
 
 const router = express.Router();
+
+// Taux fixe utilise uniquement pour convertir le total XOF en USD cote PayPal
+// (PayPal ne supporte pas le FCFA). Aligne sur le taux affiche au client dans le selecteur de devise.
+const XOF_TO_USD = 0.00164;
 
 function parseOrder(row) {
   return { ...row, items: JSON.parse(row.items || "[]") };
@@ -13,7 +18,7 @@ function parseOrder(row) {
 router.post("/", async (req, res) => {
   const {
     customerName, customerEmail, customerPhone, shippingAddress,
-    items, currency,
+    items, currency, paymentMethod,
   } = req.body;
 
   if (!customerName || !customerEmail || !items || !items.length) {
@@ -68,6 +73,24 @@ router.post("/", async (req, res) => {
   });
 
   try {
+    if (paymentMethod === "paypal") {
+      const amountUSD = Math.max(0.5, total * XOF_TO_USD);
+      const { paypalOrderId, approveUrl } = await paypalService.createOrder({
+        orderId,
+        amountUSD,
+        description: "Commande Tramsird",
+        returnUrl: `${process.env.PUBLIC_SITE_URL}/commande/${orderId}`,
+        cancelUrl: `${process.env.PUBLIC_SITE_URL}/commande/${orderId}?cancelled=1`,
+      });
+
+      db.prepare(
+        "UPDATE orders SET payment_provider = 'paypal', paypal_order_id = ? WHERE id = ?"
+      ).run(paypalOrderId, orderId);
+
+      return res.status(201).json({ orderId, paymentUrl: approveUrl, total, currency: currency || "XOF" });
+    }
+
+    const channels = paymentMethod === "orange" ? "MOBILE_MONEY" : paymentMethod === "card" ? "CREDIT_CARD" : "ALL";
     const { paymentUrl } = await initiatePayment({
       orderId,
       amount: total,
@@ -76,11 +99,14 @@ router.post("/", async (req, res) => {
       customerEmail,
       customerPhone,
       description: `Commande Tramsird`,
+      channels,
     });
+
+    db.prepare("UPDATE orders SET payment_provider = 'cinetpay' WHERE id = ?").run(orderId);
 
     res.status(201).json({ orderId, paymentUrl, total, currency: currency || "XOF" });
   } catch (err) {
-    console.error("Erreur initiation CinetPay:", err.message);
+    console.error("Erreur initiation paiement:", err.response?.data || err.message);
     res.status(502).json({
       error: "Impossible de contacter le service de paiement pour le moment. Reessaie dans un instant.",
       orderId,

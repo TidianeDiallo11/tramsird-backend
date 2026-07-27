@@ -57,7 +57,7 @@ function seed() {
     feature_2_label: "02 - LIVRAISON",
     feature_2_text: "Expedie sous 48h, suivi inclus",
     feature_3_label: "03 - PAIEMENT",
-    feature_3_text: "Carte bancaire ou Orange Money",
+    feature_3_text: "Carte bancaire, PayPal ou Orange Money",
     footer_text: "2026 Tramsird - Fabrique avec fierte",
     success_title: "COMMANDE CONFIRMEE",
     success_text: "Un e-mail de confirmation te sera envoye. Ta commande part vers toi sous 48h.",
