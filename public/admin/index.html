@@ -63,7 +63,7 @@
         <button class="btn-primary" id="new-product-btn">+ Nouveau produit</button>
       </div>
       <table class="table" id="products-table">
-        <thead><tr><th>Nom</th><th>Prix</th><th>Stock</th><th>Statut</th><th></th></tr></thead>
+        <thead><tr><th>Nom</th><th>Categorie</th><th>Prix</th><th>Stock</th><th>Statut</th><th></th></tr></thead>
         <tbody></tbody>
       </table>
     </section>
@@ -196,6 +196,17 @@
       <label>Accroche <input type="text" id="product-tagline" /></label>
       <label>Description <textarea id="product-description" rows="3"></textarea></label>
       <label>Prix (FCFA) <input type="number" id="product-price" required min="0" /></label>
+      <label>Categorie
+        <select id="product-category">
+          <option value="t-shirts">T-shirts</option>
+          <option value="shorts">Shorts</option>
+          <option value="pantalons">Pantalons</option>
+          <option value="survetements">Survetements</option>
+          <option value="hoodies">Hoodies</option>
+          <option value="jerseys">Jerseys</option>
+          <option value="accessoires">Accessoires</option>
+        </select>
+      </label>
       <label>Stock <input type="number" id="product-stock" required min="0" /></label>
       <label>URL de l'image
         <input type="url" id="product-image-url" placeholder="https://i.imgur.com/exemple.jpg" />

@@ -15,7 +15,10 @@ function parseProduct(row) {
 }
 
 router.get("/", async (req, res) => {
-  const rows = await db.query("SELECT * FROM products WHERE active = 1 ORDER BY created_at DESC");
+  const { category } = req.query;
+  const rows = category
+    ? await db.query("SELECT * FROM products WHERE active = 1 AND category = $1 ORDER BY created_at DESC", [category])
+    : await db.query("SELECT * FROM products WHERE active = 1 ORDER BY created_at DESC");
   res.json(rows.map(parseProduct));
 });
 
@@ -31,7 +34,7 @@ router.get("/:id", async (req, res) => {
 });
 
 router.post("/", requireAuth, async (req, res) => {
-  const { name, tagline, description, price, colors, sizes, stock, image_url, active } = req.body;
+  const { name, tagline, description, price, colors, sizes, stock, image_url, category, active } = req.body;
 
   if (!name || price == null) {
     return res.status(400).json({ error: "Le nom et le prix sont obligatoires." });
@@ -39,8 +42,8 @@ router.post("/", requireAuth, async (req, res) => {
 
   const id = uuidv4();
   await db.query(
-    `INSERT INTO products (id, name, tagline, description, price, colors, sizes, stock, image_url, active)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+    `INSERT INTO products (id, name, tagline, description, price, colors, sizes, stock, image_url, category, active)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
     [
       id,
       name,
@@ -51,6 +54,7 @@ router.post("/", requireAuth, async (req, res) => {
       JSON.stringify(sizes || []),
       stock ?? 0,
       image_url || null,
+      category || "accessoires",
       active === false ? 0 : 1,
     ]
   );
@@ -64,7 +68,7 @@ router.put("/:id", requireAuth, async (req, res) => {
   if (!existing) return res.status(404).json({ error: "Produit introuvable." });
 
   const {
-    name, tagline, description, price, colors, sizes, stock, image_url, active,
+    name, tagline, description, price, colors, sizes, stock, image_url, category, active,
   } = req.body;
 
   await db.query(
@@ -77,9 +81,10 @@ router.put("/:id", requireAuth, async (req, res) => {
       sizes = $6,
       stock = $7,
       image_url = $8,
-      active = $9,
+      category = $9,
+      active = $10,
       updated_at = now()
-    WHERE id = $10`,
+    WHERE id = $11`,
     [
       name ?? existing.name,
       tagline ?? existing.tagline,
@@ -89,6 +94,7 @@ router.put("/:id", requireAuth, async (req, res) => {
       sizes ? JSON.stringify(sizes) : existing.sizes,
       stock ?? existing.stock,
       image_url !== undefined ? image_url : existing.image_url,
+      category ?? existing.category,
       active === undefined ? existing.active : (active ? 1 : 0),
       req.params.id,
     ]

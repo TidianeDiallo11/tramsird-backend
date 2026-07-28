@@ -31,6 +31,7 @@ async function initSchema() {
       sizes TEXT NOT NULL DEFAULT '[]',
       stock INTEGER NOT NULL DEFAULT 0,
       image_url TEXT,
+      category TEXT NOT NULL DEFAULT 'accessoires',
       active INTEGER NOT NULL DEFAULT 1,
       created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
       updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
@@ -73,10 +74,12 @@ async function initSchema() {
     CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(payment_status);
     CREATE INDEX IF NOT EXISTS idx_orders_created ON orders(created_at);
     CREATE INDEX IF NOT EXISTS idx_products_active ON products(active);
+    CREATE INDEX IF NOT EXISTS idx_products_category ON products(category);
   `);
 
   await pool.query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_provider TEXT`);
   await pool.query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS paypal_order_id TEXT`);
+  await pool.query(`ALTER TABLE products ADD COLUMN IF NOT EXISTS category TEXT NOT NULL DEFAULT 'accessoires'`);
 }
 
 module.exports = { pool, query, one, initSchema };

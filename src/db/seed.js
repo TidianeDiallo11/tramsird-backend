@@ -22,8 +22,8 @@ async function seed() {
   const existingProduct = await db.one("SELECT id FROM products LIMIT 1");
   if (!existingProduct) {
     await db.query(
-      `INSERT INTO products (id, name, tagline, description, price, colors, sizes, stock, image_url, active)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 1)`,
+      `INSERT INTO products (id, name, tagline, description, price, colors, sizes, stock, image_url, category, active)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 1)`,
       [
         "trm-001",
         "Hoodie Sahel",
@@ -38,6 +38,7 @@ async function seed() {
         JSON.stringify(["S", "M", "L", "XL", "XXL"]),
         14,
         null,
+        "hoodies",
       ]
     );
     console.log("Produit initial cree : Hoodie Sahel");

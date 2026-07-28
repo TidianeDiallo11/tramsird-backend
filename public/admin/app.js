@@ -129,6 +129,16 @@ async function loadDashboard() {
 
 let productsCache = [];
 
+const CATEGORY_LABELS = {
+  "t-shirts": "T-shirts",
+  shorts: "Shorts",
+  pantalons: "Pantalons",
+  survetements: "Survetements",
+  hoodies: "Hoodies",
+  jerseys: "Jerseys",
+  accessoires: "Accessoires",
+};
+
 async function loadProducts() {
   try {
     productsCache = await apiFetch("/products/admin/all");
@@ -136,12 +146,13 @@ async function loadProducts() {
     tbody.innerHTML = productsCache.map((p) => `
       <tr data-id="${p.id}">
         <td>${p.name}</td>
+        <td>${CATEGORY_LABELS[p.category] || p.category || "-"}</td>
         <td>${formatFCFA(p.price)}</td>
         <td>${p.stock}</td>
         <td>${p.active ? '<span class="badge badge-paid">visible</span>' : '<span class="badge badge-cancelled">masque</span>'}</td>
         <td><button class="btn-secondary edit-product-btn" data-id="${p.id}">Modifier</button></td>
       </tr>
-    `).join("") || `<tr><td colspan="5">Aucun produit. Clique sur "Nouveau produit" pour commencer.</td></tr>`;
+    `).join("") || `<tr><td colspan="6">Aucun produit. Clique sur "Nouveau produit" pour commencer.</td></tr>`;
 
     document.querySelectorAll(".edit-product-btn").forEach((btn) => {
       btn.addEventListener("click", (e) => {
@@ -168,6 +179,7 @@ function openProductModal(id) {
     document.getElementById("product-tagline").value = p.tagline || "";
     document.getElementById("product-description").value = p.description || "";
     document.getElementById("product-price").value = p.price;
+    document.getElementById("product-category").value = p.category || "accessoires";
     document.getElementById("product-stock").value = p.stock;
     document.getElementById("product-image-url").value = p.image_url || "";
     document.getElementById("product-sizes").value = (p.sizes || []).join(",");
@@ -229,6 +241,7 @@ document.getElementById("product-form").addEventListener("submit", async (e) => 
     tagline: document.getElementById("product-tagline").value,
     description: document.getElementById("product-description").value,
     price: Number(document.getElementById("product-price").value),
+    category: document.getElementById("product-category").value,
     stock: Number(document.getElementById("product-stock").value),
     image_url: document.getElementById("product-image-url").value.trim() || null,
     sizes,
