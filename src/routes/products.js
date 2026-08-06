@@ -11,11 +11,18 @@ function parseProduct(row) {
     colors: JSON.parse(row.colors || "[]"),
     sizes: JSON.parse(row.sizes || "[]"),
     active: !!row.active,
+    preorder: !!row.preorder,
   };
 }
 
 router.get("/", async (req, res) => {
-  const { category } = req.query;
+  const { category, preorder } = req.query;
+
+  if (preorder === "1") {
+    const rows = await db.query("SELECT * FROM products WHERE preorder = 1 ORDER BY created_at DESC");
+    return res.json(rows.map(parseProduct));
+  }
+
   const rows = category
     ? await db.query("SELECT * FROM products WHERE active = 1 AND category = $1 ORDER BY created_at DESC", [category])
     : await db.query("SELECT * FROM products WHERE active = 1 ORDER BY created_at DESC");
@@ -34,7 +41,7 @@ router.get("/:id", async (req, res) => {
 });
 
 router.post("/", requireAuth, async (req, res) => {
-  const { name, tagline, description, price, colors, sizes, stock, image_url, category, active } = req.body;
+  const { name, tagline, description, price, colors, sizes, stock, image_url, category, preorder, active } = req.body;
 
   if (!name || price == null) {
     return res.status(400).json({ error: "Le nom et le prix sont obligatoires." });
@@ -42,8 +49,8 @@ router.post("/", requireAuth, async (req, res) => {
 
   const id = uuidv4();
   await db.query(
-    `INSERT INTO products (id, name, tagline, description, price, colors, sizes, stock, image_url, category, active)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+    `INSERT INTO products (id, name, tagline, description, price, colors, sizes, stock, image_url, category, preorder, active)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
     [
       id,
       name,
@@ -55,6 +62,7 @@ router.post("/", requireAuth, async (req, res) => {
       stock ?? 0,
       image_url || null,
       category || "accessoires",
+      preorder ? 1 : 0,
       active === false ? 0 : 1,
     ]
   );
@@ -68,7 +76,7 @@ router.put("/:id", requireAuth, async (req, res) => {
   if (!existing) return res.status(404).json({ error: "Produit introuvable." });
 
   const {
-    name, tagline, description, price, colors, sizes, stock, image_url, category, active,
+    name, tagline, description, price, colors, sizes, stock, image_url, category, preorder, active,
   } = req.body;
 
   await db.query(
@@ -82,9 +90,10 @@ router.put("/:id", requireAuth, async (req, res) => {
       stock = $7,
       image_url = $8,
       category = $9,
-      active = $10,
+      preorder = $10,
+      active = $11,
       updated_at = now()
-    WHERE id = $11`,
+    WHERE id = $12`,
     [
       name ?? existing.name,
       tagline ?? existing.tagline,
@@ -95,6 +104,7 @@ router.put("/:id", requireAuth, async (req, res) => {
       stock ?? existing.stock,
       image_url !== undefined ? image_url : existing.image_url,
       category ?? existing.category,
+      preorder === undefined ? existing.preorder : (preorder ? 1 : 0),
       active === undefined ? existing.active : (active ? 1 : 0),
       req.params.id,
     ]

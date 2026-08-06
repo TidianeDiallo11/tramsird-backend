@@ -34,6 +34,7 @@
       <button class="nav-item active" data-view="dashboard">Tableau de bord</button>
       <button class="nav-item" data-view="products">Produits</button>
       <button class="nav-item" data-view="orders">Commandes</button>
+      <button class="nav-item" data-view="preorders">Precommandes</button>
       <button class="nav-item" data-view="content">Contenu du site</button>
     </nav>
     <button id="account-btn" class="btn-secondary" style="margin-bottom: 0.5rem;">Mon compte</button>
@@ -82,6 +83,16 @@
       </div>
       <table class="table" id="orders-table">
         <thead><tr><th>Client</th><th>Articles</th><th>Total</th><th>Paiement</th><th>Statut</th><th>Date</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </section>
+
+    <section id="view-preorders" class="view" hidden>
+      <div class="view-header">
+        <h2>Precommandes</h2>
+      </div>
+      <table class="table" id="preorders-table">
+        <thead><tr><th>Client</th><th>Contact</th><th>Articles</th><th>Statut</th><th>Date</th></tr></thead>
         <tbody></tbody>
       </table>
     </section>
@@ -219,6 +230,9 @@
       <label class="checkbox-label">
         <input type="checkbox" id="product-active" checked /> Visible sur le site
       </label>
+      <label class="checkbox-label">
+        <input type="checkbox" id="product-preorder" /> Disponible en precommande
+      </label>
       <p id="product-error" class="error-text" hidden></p>
       <div class="modal-actions">
         <button type="button" class="btn-secondary" id="product-cancel-btn">Annuler</button>
@@ -242,6 +256,22 @@
       </select>
       <button class="btn-primary" id="order-status-save-btn">Mettre a jour</button>
       <button class="btn-secondary" id="order-modal-close-btn">Fermer</button>
+    </div>
+  </div>
+</div>
+
+<div id="preorder-modal" class="modal-overlay" hidden>
+  <div class="modal">
+    <h3>Detail de la precommande</h3>
+    <div id="preorder-detail-content"></div>
+    <label class="checkbox-label">
+      <input type="checkbox" id="preorder-paid-cb" /> Payee
+    </label>
+    <label class="checkbox-label">
+      <input type="checkbox" id="preorder-cancelled-cb" /> Annulee
+    </label>
+    <div class="modal-actions">
+      <button class="btn-secondary" id="preorder-modal-close-btn">Fermer</button>
     </div>
   </div>
 </div>

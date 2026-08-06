@@ -88,6 +88,7 @@ document.querySelectorAll(".nav-item").forEach((btn) => {
     if (view === "dashboard") loadDashboard();
     if (view === "products") loadProducts();
     if (view === "orders") loadOrders();
+    if (view === "preorders") loadPreorders();
     if (view === "content") loadContent();
   });
 });
@@ -185,11 +186,13 @@ function openProductModal(id) {
     document.getElementById("product-sizes").value = (p.sizes || []).join(",");
     document.getElementById("product-colors").value = (p.colors || []).map((c) => `${c.name}:${c.hex}`).join(",");
     document.getElementById("product-active").checked = !!p.active;
+    document.getElementById("product-preorder").checked = !!p.preorder;
   } else {
     title.textContent = "Nouveau produit";
     document.getElementById("product-form").reset();
     document.getElementById("product-id").value = "";
     document.getElementById("product-active").checked = true;
+    document.getElementById("product-preorder").checked = false;
   }
 
   updateImagePreview();
@@ -247,6 +250,7 @@ document.getElementById("product-form").addEventListener("submit", async (e) => 
     sizes,
     colors,
     active: document.getElementById("product-active").checked,
+    preorder: document.getElementById("product-preorder").checked,
   };
 
   try {
@@ -332,6 +336,88 @@ document.getElementById("order-status-save-btn").addEventListener("click", async
   } catch (err) {
     alert(err.message);
   }
+});
+
+let preordersCache = [];
+let selectedPreorderId = null;
+
+function preorderStatusBadge(status) {
+  const labels = { pending: "en attente", paid: "payee", cancelled: "annulee" };
+  const badgeClass = status === "paid" ? "badge-paid" : status === "cancelled" ? "badge-cancelled" : "badge-new";
+  return `<span class="badge ${badgeClass}">${labels[status] || status}</span>`;
+}
+
+async function loadPreorders() {
+  try {
+    preordersCache = await apiFetch("/preorders");
+    const tbody = document.querySelector("#preorders-table tbody");
+    tbody.innerHTML = preordersCache.map((p) => `
+      <tr data-id="${p.id}">
+        <td>${p.customer_name}</td>
+        <td>${p.customer_email}<br/><span style="color: var(--text-muted)">${p.customer_phone || "-"}</span></td>
+        <td>${p.items.reduce((s, i) => s + i.qty, 0)} article(s)</td>
+        <td>${preorderStatusBadge(p.status)}</td>
+        <td>${formatDate(p.created_at)}</td>
+      </tr>
+    `).join("") || `<tr><td colspan="5">Aucune precommande pour le moment.</td></tr>`;
+
+    tbody.querySelectorAll("tr[data-id]").forEach((row) => {
+      row.addEventListener("click", () => openPreorderModal(row.dataset.id));
+    });
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+function openPreorderModal(id) {
+  const preorder = preordersCache.find((p) => p.id === id);
+  if (!preorder) return;
+  selectedPreorderId = id;
+
+  const content = document.getElementById("preorder-detail-content");
+  content.innerHTML = `
+    <div class="order-line"><span>Client</span><span>${preorder.customer_name}</span></div>
+    <div class="order-line"><span>Email</span><span>${preorder.customer_email}</span></div>
+    <div class="order-line"><span>Telephone</span><span>${preorder.customer_phone || "-"}</span></div>
+    <div class="order-line"><span>Adresse</span><span>${preorder.shipping_address || "-"}</span></div>
+    <br/>
+    ${preorder.items.map((i) => `
+      <div class="order-line"><span>${i.name} - ${i.color || "-"}, ${i.size || "-"} x${i.qty}</span><span>${formatFCFA(i.unit_price * i.qty)}</span></div>
+    `).join("")}
+  `;
+
+  document.getElementById("preorder-paid-cb").checked = preorder.status === "paid";
+  document.getElementById("preorder-cancelled-cb").checked = preorder.status === "cancelled";
+  document.getElementById("preorder-modal").hidden = false;
+}
+
+document.getElementById("preorder-modal-close-btn").addEventListener("click", () => {
+  document.getElementById("preorder-modal").hidden = true;
+});
+
+async function updatePreorderStatus(status) {
+  try {
+    await apiFetch(`/preorders/${selectedPreorderId}/status`, {
+      method: "PUT",
+      body: JSON.stringify({ status }),
+    });
+    await loadPreorders();
+    const preorder = preordersCache.find((p) => p.id === selectedPreorderId);
+    if (preorder) {
+      document.getElementById("preorder-paid-cb").checked = preorder.status === "paid";
+      document.getElementById("preorder-cancelled-cb").checked = preorder.status === "cancelled";
+    }
+  } catch (err) {
+    alert(err.message);
+  }
+}
+
+document.getElementById("preorder-paid-cb").addEventListener("change", (e) => {
+  updatePreorderStatus(e.target.checked ? "paid" : "pending");
+});
+
+document.getElementById("preorder-cancelled-cb").addEventListener("change", (e) => {
+  updatePreorderStatus(e.target.checked ? "cancelled" : "pending");
 });
 
 async function loadContent() {
