@@ -31,6 +31,7 @@ async function initSchema() {
       sizes TEXT NOT NULL DEFAULT '[]',
       stock INTEGER NOT NULL DEFAULT 0,
       image_url TEXT,
+      images TEXT NOT NULL DEFAULT '[]',
       category TEXT NOT NULL DEFAULT 'accessoires',
       active INTEGER NOT NULL DEFAULT 1,
       preorder INTEGER NOT NULL DEFAULT 0,
@@ -95,6 +96,7 @@ async function initSchema() {
   await pool.query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS paypal_order_id TEXT`);
   await pool.query(`ALTER TABLE products ADD COLUMN IF NOT EXISTS category TEXT NOT NULL DEFAULT 'accessoires'`);
   await pool.query(`ALTER TABLE products ADD COLUMN IF NOT EXISTS preorder INTEGER NOT NULL DEFAULT 0`);
+  await pool.query(`ALTER TABLE products ADD COLUMN IF NOT EXISTS images TEXT NOT NULL DEFAULT '[]'`);
   await pool.query(`CREATE INDEX IF NOT EXISTS idx_products_category ON products(category)`);
   await pool.query(`CREATE INDEX IF NOT EXISTS idx_products_preorder ON products(preorder)`);
 }

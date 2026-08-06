@@ -10,6 +10,7 @@ function parseProduct(row) {
     ...row,
     colors: JSON.parse(row.colors || "[]"),
     sizes: JSON.parse(row.sizes || "[]"),
+    images: JSON.parse(row.images || "[]"),
     active: !!row.active,
     preorder: !!row.preorder,
   };
@@ -41,16 +42,17 @@ router.get("/:id", async (req, res) => {
 });
 
 router.post("/", requireAuth, async (req, res) => {
-  const { name, tagline, description, price, colors, sizes, stock, image_url, category, preorder, active } = req.body;
+  const { name, tagline, description, price, colors, sizes, stock, images, category, preorder, active } = req.body;
 
   if (!name || price == null) {
     return res.status(400).json({ error: "Le nom et le prix sont obligatoires." });
   }
 
+  const imageList = (images || []).filter(Boolean);
   const id = uuidv4();
   await db.query(
-    `INSERT INTO products (id, name, tagline, description, price, colors, sizes, stock, image_url, category, preorder, active)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
+    `INSERT INTO products (id, name, tagline, description, price, colors, sizes, stock, image_url, images, category, preorder, active)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
     [
       id,
       name,
@@ -60,7 +62,8 @@ router.post("/", requireAuth, async (req, res) => {
       JSON.stringify(colors || []),
       JSON.stringify(sizes || []),
       stock ?? 0,
-      image_url || null,
+      imageList[0] || null,
+      JSON.stringify(imageList),
       category || "accessoires",
       preorder ? 1 : 0,
       active === false ? 0 : 1,
@@ -76,8 +79,10 @@ router.put("/:id", requireAuth, async (req, res) => {
   if (!existing) return res.status(404).json({ error: "Produit introuvable." });
 
   const {
-    name, tagline, description, price, colors, sizes, stock, image_url, category, preorder, active,
+    name, tagline, description, price, colors, sizes, stock, images, category, preorder, active,
   } = req.body;
+
+  const imageList = images !== undefined ? images.filter(Boolean) : JSON.parse(existing.images || "[]");
 
   await db.query(
     `UPDATE products SET
@@ -89,11 +94,12 @@ router.put("/:id", requireAuth, async (req, res) => {
       sizes = $6,
       stock = $7,
       image_url = $8,
-      category = $9,
-      preorder = $10,
-      active = $11,
+      images = $9,
+      category = $10,
+      preorder = $11,
+      active = $12,
       updated_at = now()
-    WHERE id = $12`,
+    WHERE id = $13`,
     [
       name ?? existing.name,
       tagline ?? existing.tagline,
@@ -102,7 +108,8 @@ router.put("/:id", requireAuth, async (req, res) => {
       colors ? JSON.stringify(colors) : existing.colors,
       sizes ? JSON.stringify(sizes) : existing.sizes,
       stock ?? existing.stock,
-      image_url !== undefined ? image_url : existing.image_url,
+      imageList[0] || null,
+      JSON.stringify(imageList),
       category ?? existing.category,
       preorder === undefined ? existing.preorder : (preorder ? 1 : 0),
       active === undefined ? existing.active : (active ? 1 : 0),

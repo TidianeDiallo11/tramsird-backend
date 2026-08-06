@@ -182,7 +182,7 @@ function openProductModal(id) {
     document.getElementById("product-price").value = p.price;
     document.getElementById("product-category").value = p.category || "accessoires";
     document.getElementById("product-stock").value = p.stock;
-    document.getElementById("product-image-url").value = p.image_url || "";
+    document.getElementById("product-images").value = (p.images && p.images.length ? p.images : (p.image_url ? [p.image_url] : [])).join("\n");
     document.getElementById("product-sizes").value = (p.sizes || []).join(",");
     document.getElementById("product-colors").value = (p.colors || []).map((c) => `${c.name}:${c.hex}`).join(",");
     document.getElementById("product-active").checked = !!p.active;
@@ -199,26 +199,31 @@ function openProductModal(id) {
   modal.hidden = false;
 }
 
-function updateImagePreview() {
-  const url = document.getElementById("product-image-url").value.trim();
-  const wrap = document.getElementById("product-image-preview-wrap");
-  const img = document.getElementById("product-image-preview");
-  if (url) {
-    img.src = url;
-    wrap.hidden = false;
-  } else {
-    wrap.hidden = true;
-    img.src = "";
-  }
+function getProductImageUrls() {
+  return document.getElementById("product-images").value
+    .split("\n")
+    .map((s) => s.trim())
+    .filter(Boolean);
 }
 
-document.getElementById("product-image-url").addEventListener("input", updateImagePreview);
-document.getElementById("product-image-preview").addEventListener("error", () => {
-  document.getElementById("product-image-preview-wrap").hidden = true;
-});
-document.getElementById("product-image-preview").addEventListener("load", () => {
-  document.getElementById("product-image-preview-wrap").hidden = false;
-});
+function updateImagePreview() {
+  const urls = getProductImageUrls();
+  const wrap = document.getElementById("product-image-preview-wrap");
+  if (!urls.length) {
+    wrap.hidden = true;
+    wrap.innerHTML = "";
+    return;
+  }
+  wrap.hidden = false;
+  wrap.innerHTML = urls.map((url, idx) => `
+    <div class="image-preview-item">
+      <img src="${url}" alt="Apercu ${idx + 1}" onerror="this.closest('.image-preview-item').style.display='none'" />
+      ${idx === 0 ? '<span class="image-preview-main">Principale</span>' : ""}
+    </div>
+  `).join("");
+}
+
+document.getElementById("product-images").addEventListener("input", updateImagePreview);
 document.getElementById("new-product-btn").addEventListener("click", () => openProductModal(null));
 document.getElementById("product-cancel-btn").addEventListener("click", () => {
   document.getElementById("product-modal").hidden = true;
@@ -246,7 +251,7 @@ document.getElementById("product-form").addEventListener("submit", async (e) => 
     price: Number(document.getElementById("product-price").value),
     category: document.getElementById("product-category").value,
     stock: Number(document.getElementById("product-stock").value),
-    image_url: document.getElementById("product-image-url").value.trim() || null,
+    images: getProductImageUrls(),
     sizes,
     colors,
     active: document.getElementById("product-active").checked,
