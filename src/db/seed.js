@@ -47,7 +47,7 @@ async function seed() {
   }
 
   const defaultContent = {
-    home_eyebrow: "DROP N1 - COLLECTION SAHEL",
+    home_eyebrow: "COLLECTION SAHEL",
     home_title_line1: "PORTE",
     home_title_line2: "TON",
     home_title_line3: "HERITAGE",
