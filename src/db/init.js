@@ -87,8 +87,6 @@ async function initSchema() {
     CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(payment_status);
     CREATE INDEX IF NOT EXISTS idx_orders_created ON orders(created_at);
     CREATE INDEX IF NOT EXISTS idx_products_active ON products(active);
-    CREATE INDEX IF NOT EXISTS idx_products_category ON products(category);
-    CREATE INDEX IF NOT EXISTS idx_products_preorder ON products(preorder);
     CREATE INDEX IF NOT EXISTS idx_preorders_status ON preorders(status);
     CREATE INDEX IF NOT EXISTS idx_preorders_created ON preorders(created_at);
   `);
@@ -97,6 +95,8 @@ async function initSchema() {
   await pool.query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS paypal_order_id TEXT`);
   await pool.query(`ALTER TABLE products ADD COLUMN IF NOT EXISTS category TEXT NOT NULL DEFAULT 'accessoires'`);
   await pool.query(`ALTER TABLE products ADD COLUMN IF NOT EXISTS preorder INTEGER NOT NULL DEFAULT 0`);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_products_category ON products(category)`);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_products_preorder ON products(preorder)`);
 }
 
 module.exports = { pool, query, one, initSchema };
