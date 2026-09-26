@@ -8,7 +8,7 @@ async function initiatePayment({ orderId, amount, currency, customerName, custom
     site_id: process.env.CINETPAY_SITE_ID,
     transaction_id: orderId,
     amount: Math.round(amount),
-    currency: currency || "XOF",
+    currency: currency || "GNF",
     description: description || "Commande Tramsird",
     customer_name: customerName,
     customer_email: customerEmail,

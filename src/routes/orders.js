@@ -7,9 +7,9 @@ const paypalService = require("../services/paypal");
 
 const router = express.Router();
 
-// Taux fixe utilise uniquement pour convertir le total XOF en USD cote PayPal
-// (PayPal ne supporte pas le FCFA). Aligne sur le taux affiche au client dans le selecteur de devise.
-const XOF_TO_USD = 0.00164;
+// Taux fixe utilise uniquement pour convertir le total GNF en USD cote PayPal
+// (PayPal ne supporte pas le franc guineen). Aligne sur le taux affiche au client dans le selecteur de devise.
+const GNF_TO_USD = 0.000116;
 
 function parseOrder(row) {
   return { ...row, items: JSON.parse(row.items || "[]") };
@@ -66,13 +66,13 @@ router.post("/", async (req, res) => {
       subtotal,
       shippingFee,
       total,
-      currency || "XOF",
+      currency || "GNF",
     ]
   );
 
   try {
     if (paymentMethod === "paypal") {
-      const amountUSD = Math.max(0.5, total * XOF_TO_USD);
+      const amountUSD = Math.max(0.5, total * GNF_TO_USD);
       const { paypalOrderId, approveUrl } = await paypalService.createOrder({
         orderId,
         amountUSD,
@@ -86,14 +86,14 @@ router.post("/", async (req, res) => {
         [paypalOrderId, orderId]
       );
 
-      return res.status(201).json({ orderId, paymentUrl: approveUrl, total, currency: currency || "XOF" });
+      return res.status(201).json({ orderId, paymentUrl: approveUrl, total, currency: currency || "GNF" });
     }
 
     const channels = paymentMethod === "orange" ? "MOBILE_MONEY" : paymentMethod === "card" ? "CREDIT_CARD" : "ALL";
     const { paymentUrl } = await initiatePayment({
       orderId,
       amount: total,
-      currency: currency || "XOF",
+      currency: currency || "GNF",
       customerName,
       customerEmail,
       customerPhone,
@@ -103,7 +103,7 @@ router.post("/", async (req, res) => {
 
     await db.query("UPDATE orders SET payment_provider = 'cinetpay' WHERE id = $1", [orderId]);
 
-    res.status(201).json({ orderId, paymentUrl, total, currency: currency || "XOF" });
+    res.status(201).json({ orderId, paymentUrl, total, currency: currency || "GNF" });
   } catch (err) {
     console.error("Erreur initiation paiement:", err.response?.data || err.message);
     res.status(502).json({

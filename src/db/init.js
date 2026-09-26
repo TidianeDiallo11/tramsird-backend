@@ -61,7 +61,7 @@ async function initSchema() {
       subtotal INTEGER NOT NULL,
       shipping_fee INTEGER NOT NULL DEFAULT 0,
       total INTEGER NOT NULL,
-      currency TEXT NOT NULL DEFAULT 'XOF',
+      currency TEXT NOT NULL DEFAULT 'GNF',
       payment_method TEXT,
       payment_provider TEXT,
       paypal_order_id TEXT,
