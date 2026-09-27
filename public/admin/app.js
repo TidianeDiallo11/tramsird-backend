@@ -20,8 +20,8 @@ async function apiFetch(path, options = {}) {
   return data;
 }
 
-function formatFCFA(n) {
-  return `${Math.round(n).toLocaleString("fr-FR")} FCFA`;
+function formatGNF(n) {
+  return `${Math.round(n).toLocaleString("fr-FR")} GNF`;
 }
 function formatDate(iso) {
   return new Date(iso).toLocaleString("fr-FR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
@@ -98,7 +98,7 @@ async function loadDashboard() {
     const data = await apiFetch("/stats/dashboard");
 
     document.getElementById("stat-grid").innerHTML = `
-      <div class="stat-card"><p class="stat-label">CHIFFRE D'AFFAIRES</p><p class="stat-value">${formatFCFA(data.totalRevenue)}</p></div>
+      <div class="stat-card"><p class="stat-label">CHIFFRE D'AFFAIRES</p><p class="stat-value">${formatGNF(data.totalRevenue)}</p></div>
       <div class="stat-card"><p class="stat-label">COMMANDES PAYEES</p><p class="stat-value">${data.paidOrdersCount}</p></div>
       <div class="stat-card"><p class="stat-label">EN ATTENTE</p><p class="stat-value">${data.pendingOrdersCount}</p></div>
     `;
@@ -107,7 +107,7 @@ async function loadDashboard() {
     tbody.innerHTML = data.recentOrders.map((o) => `
       <tr>
         <td>${o.customer_name}</td>
-        <td>${formatFCFA(o.total)}</td>
+        <td>${formatGNF(o.total)}</td>
         <td>${statusBadge(o.payment_status)}</td>
         <td>${statusBadge(o.status)}</td>
         <td>${formatDate(o.created_at)}</td>
@@ -148,7 +148,7 @@ async function loadProducts() {
       <tr data-id="${p.id}">
         <td>${p.name}</td>
         <td>${CATEGORY_LABELS[p.category] || p.category || "-"}</td>
-        <td>${formatFCFA(p.price)}</td>
+        <td>${formatGNF(p.price)}</td>
         <td>${p.stock}</td>
         <td>${p.active ? '<span class="badge badge-paid">visible</span>' : '<span class="badge badge-cancelled">masque</span>'}</td>
         <td><button class="btn-secondary edit-product-btn" data-id="${p.id}">Modifier</button></td>
@@ -285,7 +285,7 @@ async function loadOrders() {
       <tr data-id="${o.id}">
         <td>${o.customer_name}</td>
         <td>${o.items.reduce((s, i) => s + i.qty, 0)} article(s)</td>
-        <td>${formatFCFA(o.total)}</td>
+        <td>${formatGNF(o.total)}</td>
         <td>${statusBadge(o.payment_status)}</td>
         <td>${statusBadge(o.status)}</td>
         <td>${formatDate(o.created_at)}</td>
@@ -314,10 +314,10 @@ function openOrderModal(id) {
     <div class="order-line"><span>Telephone</span><span>${order.customer_phone || "-"}</span></div>
     <div class="order-line"><span>Adresse</span><span>${order.shipping_address || "-"}</span></div>
     <div class="order-line"><span>Paiement</span><span>${order.payment_method || "-"} (${order.payment_status})</span></div>
-    <div class="order-line"><span>Total</span><span>${formatFCFA(order.total)}</span></div>
+    <div class="order-line"><span>Total</span><span>${formatGNF(order.total)}</span></div>
     <br/>
     ${order.items.map((i) => `
-      <div class="order-line"><span>${i.name} - ${i.color}, ${i.size} x${i.qty}</span><span>${formatFCFA(i.unit_price * i.qty)}</span></div>
+      <div class="order-line"><span>${i.name} - ${i.color}, ${i.size} x${i.qty}</span><span>${formatGNF(i.unit_price * i.qty)}</span></div>
     `).join("")}
   `;
 
@@ -387,7 +387,7 @@ function openPreorderModal(id) {
     <div class="order-line"><span>Adresse</span><span>${preorder.shipping_address || "-"}</span></div>
     <br/>
     ${preorder.items.map((i) => `
-      <div class="order-line"><span>${i.name} - ${i.color || "-"}, ${i.size || "-"} x${i.qty}</span><span>${formatFCFA(i.unit_price * i.qty)}</span></div>
+      <div class="order-line"><span>${i.name} - ${i.color || "-"}, ${i.size || "-"} x${i.qty}</span><span>${formatGNF(i.unit_price * i.qty)}</span></div>
     `).join("")}
   `;
 
