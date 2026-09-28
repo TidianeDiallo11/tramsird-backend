@@ -127,6 +127,8 @@ async function initSchema() {
   await pool.query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS discount_amount INTEGER NOT NULL DEFAULT 0`);
   await pool.query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_id TEXT`);
   await pool.query(`CREATE INDEX IF NOT EXISTS idx_orders_customer ON orders(customer_id)`);
+  await pool.query(`ALTER TABLE customers ADD COLUMN IF NOT EXISTS reset_token_hash TEXT`);
+  await pool.query(`ALTER TABLE customers ADD COLUMN IF NOT EXISTS reset_token_expires TIMESTAMPTZ`);
 }
 
 module.exports = { pool, query, one, initSchema };
