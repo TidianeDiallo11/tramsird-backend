@@ -4,6 +4,7 @@ const db = require("../db/init");
 const { requireAuth } = require("../middleware/auth");
 const { initiatePayment } = require("../services/cinetpay");
 const paypalService = require("../services/paypal");
+const { findValidPromo, computeDiscount } = require("./promocodes");
 
 const router = express.Router();
 
@@ -18,7 +19,7 @@ function parseOrder(row) {
 router.post("/", async (req, res) => {
   const {
     customerName, customerEmail, customerPhone, shippingAddress,
-    items, currency, paymentMethod,
+    items, currency, paymentMethod, promoCode,
   } = req.body;
 
   if (!customerName || !customerEmail || !items || !items.length) {
@@ -47,15 +48,24 @@ router.post("/", async (req, res) => {
     });
   }
 
+  let discountAmount = 0;
+  let appliedPromoCode = null;
+  if (promoCode) {
+    const { promo, error } = await findValidPromo(promoCode);
+    if (error) return res.status(400).json({ error });
+    discountAmount = computeDiscount(promo, subtotal);
+    appliedPromoCode = promo.code;
+  }
+
   const shippingFee = 2000;
-  const total = subtotal + shippingFee;
+  const total = subtotal - discountAmount + shippingFee;
   const orderId = uuidv4();
 
   await db.query(
     `INSERT INTO orders (
       id, customer_name, customer_email, customer_phone, shipping_address,
-      items, subtotal, shipping_fee, total, currency, payment_status, status
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'pending', 'new')`,
+      items, subtotal, shipping_fee, total, currency, promo_code, discount_amount, payment_status, status
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, 'pending', 'new')`,
     [
       orderId,
       customerName,
@@ -67,8 +77,14 @@ router.post("/", async (req, res) => {
       shippingFee,
       total,
       currency || "GNF",
+      appliedPromoCode,
+      discountAmount,
     ]
   );
+
+  if (appliedPromoCode) {
+    await db.query("UPDATE promo_codes SET used_count = used_count + 1 WHERE code = $1", [appliedPromoCode]);
+  }
 
   try {
     if (paymentMethod === "paypal") {

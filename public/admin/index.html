@@ -35,6 +35,7 @@
       <button class="nav-item" data-view="products">Produits</button>
       <button class="nav-item" data-view="orders">Commandes</button>
       <button class="nav-item" data-view="preorders">Precommandes</button>
+      <button class="nav-item" data-view="promocodes">Codes promo</button>
       <button class="nav-item" data-view="content">Contenu du site</button>
     </nav>
     <button id="account-btn" class="btn-secondary" style="margin-bottom: 0.5rem;">Mon compte</button>
@@ -93,6 +94,17 @@
       </div>
       <table class="table" id="preorders-table">
         <thead><tr><th>Client</th><th>Contact</th><th>Articles</th><th>Statut</th><th>Date</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </section>
+
+    <section id="view-promocodes" class="view" hidden>
+      <div class="view-header">
+        <h2>Codes promo</h2>
+        <button class="btn-primary" id="new-promo-btn">+ Nouveau code</button>
+      </div>
+      <table class="table" id="promocodes-table">
+        <thead><tr><th>Code</th><th>Reduction</th><th>Utilisations</th><th>Expire le</th><th>Statut</th><th></th></tr></thead>
         <tbody></tbody>
       </table>
     </section>
@@ -282,6 +294,37 @@
     <div class="modal-actions">
       <button class="btn-secondary" id="preorder-modal-close-btn">Fermer</button>
     </div>
+  </div>
+</div>
+
+<div id="promo-modal" class="modal-overlay" hidden>
+  <div class="modal">
+    <h3 id="promo-modal-title">Nouveau code promo</h3>
+    <form id="promo-form">
+      <input type="hidden" id="promo-id" />
+      <label>Code <input type="text" id="promo-code" required placeholder="BIENVENUE10" /></label>
+      <label>Type de reduction
+        <select id="promo-type">
+          <option value="percent">Pourcentage (%)</option>
+          <option value="fixed">Montant fixe (GNF)</option>
+        </select>
+      </label>
+      <label>Valeur <input type="number" id="promo-value" required min="1" /></label>
+      <label>Nombre d'utilisations max (laisse vide pour illimite)
+        <input type="number" id="promo-max-uses" min="1" />
+      </label>
+      <label>Date d'expiration (laisse vide pour jamais)
+        <input type="date" id="promo-expires-at" />
+      </label>
+      <label class="checkbox-label">
+        <input type="checkbox" id="promo-active" checked /> Actif
+      </label>
+      <p id="promo-error" class="error-text" hidden></p>
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" id="promo-cancel-btn">Annuler</button>
+        <button type="submit" class="btn-primary">Enregistrer</button>
+      </div>
+    </form>
   </div>
 </div>
 

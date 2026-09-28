@@ -89,6 +89,7 @@ document.querySelectorAll(".nav-item").forEach((btn) => {
     if (view === "products") loadProducts();
     if (view === "orders") loadOrders();
     if (view === "preorders") loadPreorders();
+    if (view === "promocodes") loadPromoCodes();
     if (view === "content") loadContent();
   });
 });
@@ -423,6 +424,118 @@ document.getElementById("preorder-paid-cb").addEventListener("change", (e) => {
 
 document.getElementById("preorder-cancelled-cb").addEventListener("change", (e) => {
   updatePreorderStatus(e.target.checked ? "cancelled" : "pending");
+});
+
+let promoCodesCache = [];
+
+function formatPromoValue(p) {
+  return p.type === "percent" ? `${p.value}%` : formatGNF(p.value);
+}
+
+async function loadPromoCodes() {
+  try {
+    promoCodesCache = await apiFetch("/promocodes");
+    const tbody = document.querySelector("#promocodes-table tbody");
+    tbody.innerHTML = promoCodesCache.map((p) => `
+      <tr data-id="${p.id}">
+        <td><strong>${p.code}</strong></td>
+        <td>${formatPromoValue(p)}</td>
+        <td>${p.used_count}${p.max_uses != null ? ` / ${p.max_uses}` : ""}</td>
+        <td>${p.expires_at ? formatDate(p.expires_at) : "-"}</td>
+        <td>${p.active ? '<span class="badge badge-paid">actif</span>' : '<span class="badge badge-cancelled">inactif</span>'}</td>
+        <td>
+          <button class="btn-secondary edit-promo-btn" data-id="${p.id}">Modifier</button>
+          <button class="btn-secondary delete-promo-btn" data-id="${p.id}">Supprimer</button>
+        </td>
+      </tr>
+    `).join("") || `<tr><td colspan="6">Aucun code promo. Clique sur "Nouveau code" pour commencer.</td></tr>`;
+
+    document.querySelectorAll(".edit-promo-btn").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        openPromoModal(btn.dataset.id);
+      });
+    });
+    document.querySelectorAll(".delete-promo-btn").forEach((btn) => {
+      btn.addEventListener("click", async (e) => {
+        e.stopPropagation();
+        if (!confirm("Supprimer ce code promo ?")) return;
+        try {
+          await apiFetch(`/promocodes/${btn.dataset.id}`, { method: "DELETE" });
+          loadPromoCodes();
+        } catch (err) {
+          alert(err.message);
+        }
+      });
+    });
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+function openPromoModal(id) {
+  const modal = document.getElementById("promo-modal");
+  const title = document.getElementById("promo-modal-title");
+  const errorEl = document.getElementById("promo-error");
+  errorEl.hidden = true;
+
+  if (id) {
+    const p = promoCodesCache.find((x) => x.id === id);
+    title.textContent = "Modifier le code promo";
+    document.getElementById("promo-id").value = p.id;
+    document.getElementById("promo-code").value = p.code;
+    document.getElementById("promo-code").disabled = true;
+    document.getElementById("promo-type").value = p.type;
+    document.getElementById("promo-value").value = p.value;
+    document.getElementById("promo-max-uses").value = p.max_uses != null ? p.max_uses : "";
+    document.getElementById("promo-expires-at").value = p.expires_at ? p.expires_at.slice(0, 10) : "";
+    document.getElementById("promo-active").checked = !!p.active;
+  } else {
+    title.textContent = "Nouveau code promo";
+    document.getElementById("promo-form").reset();
+    document.getElementById("promo-id").value = "";
+    document.getElementById("promo-code").disabled = false;
+    document.getElementById("promo-active").checked = true;
+  }
+
+  modal.hidden = false;
+}
+
+document.getElementById("new-promo-btn").addEventListener("click", () => openPromoModal(null));
+document.getElementById("promo-cancel-btn").addEventListener("click", () => {
+  document.getElementById("promo-modal").hidden = true;
+});
+
+document.getElementById("promo-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const errorEl = document.getElementById("promo-error");
+  errorEl.hidden = true;
+
+  const id = document.getElementById("promo-id").value;
+  const maxUsesRaw = document.getElementById("promo-max-uses").value;
+  const expiresAtRaw = document.getElementById("promo-expires-at").value;
+
+  const payload = {
+    code: document.getElementById("promo-code").value,
+    type: document.getElementById("promo-type").value,
+    value: Number(document.getElementById("promo-value").value),
+    maxUses: maxUsesRaw ? Number(maxUsesRaw) : null,
+    expiresAt: expiresAtRaw || null,
+    active: document.getElementById("promo-active").checked,
+  };
+
+  try {
+    if (id) {
+      await apiFetch(`/promocodes/${id}`, { method: "PUT", body: JSON.stringify(payload) });
+    } else {
+      await apiFetch("/promocodes", { method: "POST", body: JSON.stringify(payload) });
+    }
+    document.getElementById("promo-modal").hidden = true;
+    loadPromoCodes();
+  } catch (err) {
+    errorEl.textContent = err.message;
+    errorEl.hidden = false;
+  }
 });
 
 async function loadContent() {
