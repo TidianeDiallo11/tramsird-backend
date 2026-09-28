@@ -5,6 +5,7 @@ const { requireAuth } = require("../middleware/auth");
 const { initiatePayment } = require("../services/cinetpay");
 const paypalService = require("../services/paypal");
 const { findValidPromo, computeDiscount } = require("./promocodes");
+const { optionalCustomerAuth } = require("../middleware/customerAuth");
 
 const router = express.Router();
 
@@ -16,7 +17,7 @@ function parseOrder(row) {
   return { ...row, items: JSON.parse(row.items || "[]") };
 }
 
-router.post("/", async (req, res) => {
+router.post("/", optionalCustomerAuth, async (req, res) => {
   const {
     customerName, customerEmail, customerPhone, shippingAddress,
     items, currency, paymentMethod, promoCode,
@@ -64,8 +65,8 @@ router.post("/", async (req, res) => {
   await db.query(
     `INSERT INTO orders (
       id, customer_name, customer_email, customer_phone, shipping_address,
-      items, subtotal, shipping_fee, total, currency, promo_code, discount_amount, payment_status, status
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, 'pending', 'new')`,
+      items, subtotal, shipping_fee, total, currency, promo_code, discount_amount, customer_id, payment_status, status
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, 'pending', 'new')`,
     [
       orderId,
       customerName,
@@ -79,6 +80,7 @@ router.post("/", async (req, res) => {
       currency || "GNF",
       appliedPromoCode,
       discountAmount,
+      req.customer ? req.customer.id : null,
     ]
   );
 

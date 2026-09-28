@@ -85,6 +85,17 @@ async function initSchema() {
       updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
     );
 
+    CREATE TABLE IF NOT EXISTS customers (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      email TEXT UNIQUE NOT NULL,
+      password_hash TEXT NOT NULL,
+      phone TEXT,
+      address TEXT,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    );
+
     CREATE TABLE IF NOT EXISTS admins (
       id TEXT PRIMARY KEY,
       email TEXT UNIQUE NOT NULL,
@@ -114,6 +125,8 @@ async function initSchema() {
   await pool.query(`CREATE INDEX IF NOT EXISTS idx_products_preorder ON products(preorder)`);
   await pool.query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS promo_code TEXT`);
   await pool.query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS discount_amount INTEGER NOT NULL DEFAULT 0`);
+  await pool.query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_id TEXT`);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_orders_customer ON orders(customer_id)`);
 }
 
 module.exports = { pool, query, one, initSchema };
