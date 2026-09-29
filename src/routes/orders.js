@@ -17,6 +17,14 @@ function parseOrder(row) {
   return { ...row, items: JSON.parse(row.items || "[]") };
 }
 
+function availableStockForItem(product, size) {
+  const sizes = JSON.parse(product.sizes || "[]");
+  const sized = sizes.filter((s) => s && typeof s === "object" && "stock" in s);
+  if (sized.length === 0) return { stock: product.stock, sized: false };
+  const entry = sized.find((s) => s.size === size);
+  return { stock: entry ? entry.stock : 0, sized: true };
+}
+
 router.post("/", optionalCustomerAuth, async (req, res) => {
   const {
     customerName, customerEmail, customerPhone, shippingAddress,
@@ -34,8 +42,10 @@ router.post("/", optionalCustomerAuth, async (req, res) => {
     if (!product) {
       return res.status(400).json({ error: `Produit introuvable : ${item.productId}` });
     }
-    if (product.stock < item.qty) {
-      return res.status(400).json({ error: `Stock insuffisant pour ${product.name}.` });
+    const { stock: availableStock, sized } = availableStockForItem(product, item.size);
+    if (availableStock < item.qty) {
+      const label = sized && item.size ? `${product.name} (taille ${item.size})` : product.name;
+      return res.status(400).json({ error: `Stock insuffisant pour ${label}.` });
     }
     const lineTotal = product.price * item.qty;
     subtotal += lineTotal;

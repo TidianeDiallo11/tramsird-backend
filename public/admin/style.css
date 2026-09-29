@@ -246,6 +246,9 @@ input:focus, textarea:focus, select:focus {
 #order-detail-content, #preorder-detail-content { font-family: 'Space Mono', monospace; font-size: 0.8rem; line-height: 1.6; }
 #order-detail-content .order-line, #preorder-detail-content .order-line { display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); padding: 0.4rem 0; }
 
+.sizes-stock-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.6rem; margin: -0.4rem 0 1rem; }
+.sizes-stock-grid label { font-size: 0.75rem; }
+
 .image-preview-grid { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: -0.5rem 0 1rem; }
 .image-preview-grid .image-preview-item { position: relative; width: 72px; height: 72px; }
 .image-preview-grid img { width: 100%; height: 100%; object-fit: cover; border-radius: 3px; border: 1px solid var(--border-light); }

@@ -241,13 +241,23 @@
           <option value="accessoires">Accessoires</option>
         </select>
       </label>
-      <label>Stock <input type="number" id="product-stock" required min="0" /></label>
       <label>URLs des images (une par ligne, la premiere est l'image principale)
         <textarea id="product-images" rows="3" placeholder="https://i.imgur.com/face.jpg&#10;https://i.imgur.com/dos.jpg&#10;https://i.imgur.com/detail.jpg"></textarea>
       </label>
       <div id="product-image-preview-wrap" class="image-preview-grid" hidden></div>
-      <label>Tailles (separees par virgule) <input type="text" id="product-sizes" placeholder="S,M,L,XL" /></label>
       <label>Couleurs (nom:hex, separees par virgule) <input type="text" id="product-colors" placeholder="Terracotta:#C4562B,Noir:#141110" /></label>
+      <label class="checkbox-label">
+        <input type="checkbox" id="product-has-sizes" /> Ce produit a des tailles
+      </label>
+      <div id="product-sizes-wrap" class="sizes-stock-grid" hidden>
+        <label>XS <input type="number" min="0" id="size-stock-XS" /></label>
+        <label>S <input type="number" min="0" id="size-stock-S" /></label>
+        <label>M <input type="number" min="0" id="size-stock-M" /></label>
+        <label>L <input type="number" min="0" id="size-stock-L" /></label>
+        <label>XL <input type="number" min="0" id="size-stock-XL" /></label>
+        <label>2XL <input type="number" min="0" id="size-stock-2XL" /></label>
+      </div>
+      <label id="product-stock-wrap">Stock <input type="number" id="product-stock" min="0" /></label>
       <label class="checkbox-label">
         <input type="checkbox" id="product-active" checked /> Visible sur le site
       </label>

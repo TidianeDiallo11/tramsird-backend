@@ -11,10 +11,28 @@ async function confirmPaidOrder(order, method) {
   try {
     await client.query("BEGIN");
     for (const item of items) {
-      await client.query(
-        "UPDATE products SET stock = GREATEST(0, stock - $1) WHERE id = $2",
-        [item.qty, item.product_id]
-      );
+      const { rows } = await client.query("SELECT sizes FROM products WHERE id = $1", [item.product_id]);
+      const product = rows[0];
+      const sizes = product ? JSON.parse(product.sizes || "[]") : [];
+      const sizedEntries = sizes.filter((s) => s && typeof s === "object" && "stock" in s);
+
+      if (sizedEntries.length > 0 && item.size) {
+        const updatedSizes = sizes.map((s) =>
+          s && typeof s === "object" && s.size === item.size
+            ? { ...s, stock: Math.max(0, (Number(s.stock) || 0) - item.qty) }
+            : s
+        );
+        const newTotal = updatedSizes.reduce((sum, s) => sum + (Number(s.stock) || 0), 0);
+        await client.query(
+          "UPDATE products SET sizes = $1, stock = $2 WHERE id = $3",
+          [JSON.stringify(updatedSizes), newTotal, item.product_id]
+        );
+      } else {
+        await client.query(
+          "UPDATE products SET stock = GREATEST(0, stock - $1) WHERE id = $2",
+          [item.qty, item.product_id]
+        );
+      }
     }
     await client.query(
       `UPDATE orders SET

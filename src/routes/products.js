@@ -5,6 +5,13 @@ const { requireAuth } = require("../middleware/auth");
 
 const router = express.Router();
 
+function totalStockFromSizes(sizes) {
+  if (!Array.isArray(sizes) || sizes.length === 0) return null;
+  const sized = sizes.filter((s) => s && typeof s === "object" && "stock" in s);
+  if (sized.length === 0) return null;
+  return sized.reduce((sum, s) => sum + (Number(s.stock) || 0), 0);
+}
+
 function parseProduct(row) {
   return {
     ...row,
@@ -49,6 +56,7 @@ router.post("/", requireAuth, async (req, res) => {
   }
 
   const imageList = (images || []).filter(Boolean);
+  const computedStock = totalStockFromSizes(sizes);
   const id = uuidv4();
   await db.query(
     `INSERT INTO products (id, name, tagline, description, price, colors, sizes, stock, image_url, images, category, preorder, active)
@@ -61,7 +69,7 @@ router.post("/", requireAuth, async (req, res) => {
       Math.round(price),
       JSON.stringify(colors || []),
       JSON.stringify(sizes || []),
-      stock ?? 0,
+      computedStock !== null ? computedStock : (stock ?? 0),
       imageList[0] || null,
       JSON.stringify(imageList),
       category || "accessoires",
@@ -83,6 +91,7 @@ router.put("/:id", requireAuth, async (req, res) => {
   } = req.body;
 
   const imageList = images !== undefined ? images.filter(Boolean) : JSON.parse(existing.images || "[]");
+  const computedStock = sizes ? totalStockFromSizes(sizes) : null;
 
   await db.query(
     `UPDATE products SET
@@ -107,7 +116,7 @@ router.put("/:id", requireAuth, async (req, res) => {
       price != null ? Math.round(price) : existing.price,
       colors ? JSON.stringify(colors) : existing.colors,
       sizes ? JSON.stringify(sizes) : existing.sizes,
-      stock ?? existing.stock,
+      computedStock !== null ? computedStock : (stock ?? existing.stock),
       imageList[0] || null,
       JSON.stringify(imageList),
       category ?? existing.category,

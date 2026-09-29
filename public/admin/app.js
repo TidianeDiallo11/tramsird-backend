@@ -167,6 +167,19 @@ async function loadProducts() {
   }
 }
 
+const SIZE_LABELS = ["XS", "S", "M", "L", "XL", "2XL"];
+
+function updateSizesStockVisibility() {
+  const hasSizes = document.getElementById("product-has-sizes").checked;
+  document.getElementById("product-sizes-wrap").hidden = !hasSizes;
+  const stockInput = document.getElementById("product-stock");
+  const stockWrap = document.getElementById("product-stock-wrap");
+  stockInput.disabled = hasSizes;
+  stockWrap.style.opacity = hasSizes ? 0.5 : 1;
+}
+
+document.getElementById("product-has-sizes").addEventListener("change", updateSizesStockVisibility);
+
 function openProductModal(id) {
   const modal = document.getElementById("product-modal");
   const title = document.getElementById("product-modal-title");
@@ -184,18 +197,30 @@ function openProductModal(id) {
     document.getElementById("product-category").value = p.category || "accessoires";
     document.getElementById("product-stock").value = p.stock;
     document.getElementById("product-images").value = (p.images && p.images.length ? p.images : (p.image_url ? [p.image_url] : [])).join("\n");
-    document.getElementById("product-sizes").value = (p.sizes || []).join(",");
     document.getElementById("product-colors").value = (p.colors || []).map((c) => `${c.name}:${c.hex}`).join(",");
     document.getElementById("product-active").checked = !!p.active;
     document.getElementById("product-preorder").checked = !!p.preorder;
+
+    const sizedEntries = (p.sizes || []).filter((s) => s && typeof s === "object");
+    const hasSizes = sizedEntries.length > 0;
+    document.getElementById("product-has-sizes").checked = hasSizes;
+    SIZE_LABELS.forEach((label) => {
+      const entry = sizedEntries.find((s) => s.size === label);
+      document.getElementById(`size-stock-${label}`).value = entry ? entry.stock : 0;
+    });
   } else {
     title.textContent = "Nouveau produit";
     document.getElementById("product-form").reset();
     document.getElementById("product-id").value = "";
     document.getElementById("product-active").checked = true;
     document.getElementById("product-preorder").checked = false;
+    document.getElementById("product-has-sizes").checked = false;
+    SIZE_LABELS.forEach((label) => {
+      document.getElementById(`size-stock-${label}`).value = 0;
+    });
   }
 
+  updateSizesStockVisibility();
   updateImagePreview();
   modal.hidden = false;
 }
@@ -236,8 +261,13 @@ document.getElementById("product-form").addEventListener("submit", async (e) => 
   errorEl.hidden = true;
 
   const id = document.getElementById("product-id").value;
-  const sizes = document.getElementById("product-sizes").value
-    .split(",").map((s) => s.trim()).filter(Boolean);
+  const hasSizes = document.getElementById("product-has-sizes").checked;
+  const sizes = hasSizes
+    ? SIZE_LABELS.map((label) => ({
+        size: label,
+        stock: Number(document.getElementById(`size-stock-${label}`).value) || 0,
+      }))
+    : [];
   const colors = document.getElementById("product-colors").value
     .split(",").map((s) => s.trim()).filter(Boolean)
     .map((pair) => {
@@ -251,7 +281,9 @@ document.getElementById("product-form").addEventListener("submit", async (e) => 
     description: document.getElementById("product-description").value,
     price: Number(document.getElementById("product-price").value),
     category: document.getElementById("product-category").value,
-    stock: Number(document.getElementById("product-stock").value),
+    stock: hasSizes
+      ? sizes.reduce((sum, s) => sum + s.stock, 0)
+      : Number(document.getElementById("product-stock").value),
     images: getProductImageUrls(),
     sizes,
     colors,
