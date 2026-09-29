@@ -590,9 +590,6 @@ function updatePreview() {
   };
   document.getElementById("preview-eyebrow").textContent = get("home_eyebrow");
   document.getElementById("preview-line1").textContent = get("home_title_line1");
-  document.getElementById("preview-line2").textContent = get("home_title_line2");
-  document.getElementById("preview-line3").textContent = get("home_title_line3");
-  document.getElementById("preview-subtitle").textContent = get("home_subtitle");
 }
 
 document.querySelectorAll("#content-form [data-key]").forEach((el) => {
