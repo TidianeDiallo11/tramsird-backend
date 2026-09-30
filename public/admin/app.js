@@ -250,8 +250,18 @@ function updateImagePreview() {
     <div class="image-preview-item">
       <img src="${url}" alt="Apercu ${idx + 1}" onerror="this.closest('.image-preview-item').style.display='none'" />
       ${idx === 0 ? '<span class="image-preview-main">Principale</span>' : ""}
+      <button type="button" class="image-preview-remove" data-remove-image="${idx}" aria-label="Supprimer cette photo">&times;</button>
     </div>
   `).join("");
+
+  wrap.querySelectorAll("[data-remove-image]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const removeIdx = Number(btn.dataset.removeImage);
+      const remaining = getProductImageUrls().filter((_, i) => i !== removeIdx);
+      document.getElementById("product-images").value = remaining.join("\n");
+      updateImagePreview();
+    });
+  });
 }
 
 async function uploadImage(file) {
@@ -636,6 +646,30 @@ document.getElementById("promo-form").addEventListener("submit", async (e) => {
   }
 });
 
+function renderSingleImagePreview(key) {
+  const input = document.getElementById(key);
+  const wrap = document.getElementById(`${key}-preview`);
+  if (!input.value) {
+    wrap.hidden = true;
+    wrap.innerHTML = "";
+    return;
+  }
+  wrap.hidden = false;
+  wrap.innerHTML = `
+    <div class="image-preview-item">
+      <img src="${input.value}" alt="Apercu" onerror="this.closest('.image-preview-item').style.display='none'" />
+      <button type="button" class="image-preview-remove" data-clear-image="${key}" aria-label="Supprimer cette photo">&times;</button>
+    </div>
+  `;
+  wrap.querySelector("[data-clear-image]").addEventListener("click", () => {
+    input.value = "";
+    input.dispatchEvent(new Event("input"));
+  });
+}
+
+document.getElementById("header_logo_url").addEventListener("input", () => renderSingleImagePreview("header_logo_url"));
+document.getElementById("hero_image_url").addEventListener("input", () => renderSingleImagePreview("hero_image_url"));
+
 async function loadContent() {
   try {
     const content = await apiFetch("/content");
@@ -643,6 +677,8 @@ async function loadContent() {
       const key = el.dataset.key;
       if (content[key] !== undefined) el.value = content[key];
     });
+    renderSingleImagePreview("header_logo_url");
+    renderSingleImagePreview("hero_image_url");
     updatePreview();
   } catch (err) {
     console.error(err);
