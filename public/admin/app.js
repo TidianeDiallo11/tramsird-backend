@@ -10,12 +10,12 @@ async function apiFetch(path, options = {}) {
   if (token) headers.Authorization = `Bearer ${token}`;
 
   const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
-  if (res.status === 401) {
+  const data = await res.json().catch(() => ({}));
+  if (res.status === 401 && token) {
     clearToken();
     showLogin();
     throw new Error("Session expiree.");
   }
-  const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.error || "Erreur inconnue.");
   return data;
 }
