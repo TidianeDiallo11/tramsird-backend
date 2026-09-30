@@ -7,8 +7,8 @@ async function seed() {
   const adminPassword = process.env.ADMIN_PASSWORD || "changeme123";
 
   const existingAdmin = await db.one("SELECT id FROM admins WHERE email = $1", [adminEmail]);
+  const hash = bcrypt.hashSync(adminPassword, 10);
   if (!existingAdmin) {
-    const hash = bcrypt.hashSync(adminPassword, 10);
     await db.query("INSERT INTO admins (id, email, password_hash) VALUES ($1, $2, $3)", [
       uuidv4(),
       adminEmail,
@@ -16,7 +16,8 @@ async function seed() {
     ]);
     console.log(`Compte admin cree : ${adminEmail}`);
   } else {
-    console.log(`Compte admin deja existant : ${adminEmail}`);
+    await db.query("UPDATE admins SET password_hash = $1 WHERE id = $2", [hash, existingAdmin.id]);
+    console.log(`Mot de passe admin synchronise avec ADMIN_PASSWORD : ${adminEmail}`);
   }
 
   const existingProduct = await db.one("SELECT id FROM products LIMIT 1");
