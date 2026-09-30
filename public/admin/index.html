@@ -122,12 +122,20 @@
           <div class="content-block">
             <h3>Logo et image d'en-tete</h3>
             <label>URL du logo (affiche en haut du site, a la place du texte "TRAMSIRD")
-              <input type="url" data-key="header_logo_url" placeholder="https://i.imgur.com/logo.png" />
+              <input type="url" id="header_logo_url" data-key="header_logo_url" placeholder="https://i.imgur.com/logo.png" />
             </label>
+            <div class="upload-row">
+              <button type="button" class="btn-secondary btn-upload" data-upload-target="header_logo_url">Uploader une photo</button>
+              <input type="file" accept="image/*" data-upload-input="header_logo_url" hidden />
+            </div>
             <label>URL de l'image de bandeau (grande photo en haut de la page d'accueil)
-              <input type="url" data-key="hero_image_url" placeholder="https://i.imgur.com/bandeau.jpg" />
+              <input type="url" id="hero_image_url" data-key="hero_image_url" placeholder="https://i.imgur.com/bandeau.jpg" />
             </label>
-            <p class="content-help">Laisse ce champ vide pour garder la photo par defaut. Heberge ton image sur un site comme imgur.com puis colle le lien ici.</p>
+            <div class="upload-row">
+              <button type="button" class="btn-secondary btn-upload" data-upload-target="hero_image_url">Uploader une photo</button>
+              <input type="file" accept="image/*" data-upload-input="hero_image_url" hidden />
+            </div>
+            <p class="content-help">Laisse ces champs vides pour garder les valeurs par defaut, ou uploade directement ta propre photo depuis ton appareil.</p>
           </div>
 
           <div class="content-block">
@@ -252,6 +260,10 @@
       <label>URLs des images (une par ligne, la premiere est l'image principale)
         <textarea id="product-images" rows="3" placeholder="https://i.imgur.com/face.jpg&#10;https://i.imgur.com/dos.jpg&#10;https://i.imgur.com/detail.jpg"></textarea>
       </label>
+      <div class="upload-row">
+        <button type="button" class="btn-secondary btn-upload" data-upload-target="product-images" data-upload-multiple="1">Uploader des photos</button>
+        <input type="file" accept="image/*" multiple data-upload-input="product-images" hidden />
+      </div>
       <div id="product-image-preview-wrap" class="image-preview-grid" hidden></div>
       <label>Couleurs (nom:hex, separees par virgule) <input type="text" id="product-colors" placeholder="Terracotta:#C4562B,Noir:#141110" /></label>
       <label class="checkbox-label">

@@ -15,6 +15,7 @@ const contentRoutes = require("./routes/content");
 const preorderRoutes = require("./routes/preorders");
 const { router: promoRoutes } = require("./routes/promocodes");
 const customerRoutes = require("./routes/customers");
+const uploadRoutes = require("./routes/uploads");
 
 async function start() {
   await db.initSchema();
@@ -35,6 +36,7 @@ async function start() {
   app.use("/api/preorders", preorderRoutes);
   app.use("/api/promocodes", promoRoutes);
   app.use("/api/customers", customerRoutes);
+  app.use("/api/uploads", uploadRoutes);
 
   app.get("/api/health", (req, res) => res.json({ ok: true, service: "tramsird-backend" }));
 

@@ -249,6 +249,66 @@ function updateImagePreview() {
   `).join("");
 }
 
+async function uploadImage(file) {
+  const token = getToken();
+  const formData = new FormData();
+  formData.append("file", file);
+  const res = await fetch(`${API_BASE}/uploads`, {
+    method: "POST",
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: formData,
+  });
+  const data = await res.json().catch(() => ({}));
+  if (res.status === 401 && token) {
+    clearToken();
+    showLogin();
+    throw new Error("Session expiree.");
+  }
+  if (!res.ok) throw new Error(data.error || "Echec de l'upload.");
+  return data.url;
+}
+
+document.querySelectorAll("[data-upload-target]").forEach((btn) => {
+  const targetKey = btn.dataset.uploadTarget;
+  const fileInput = document.querySelector(`[data-upload-input="${targetKey}"]`);
+  const isMultiple = btn.dataset.uploadMultiple === "1";
+
+  btn.addEventListener("click", () => fileInput.click());
+
+  fileInput.addEventListener("change", async () => {
+    const files = Array.from(fileInput.files || []);
+    if (!files.length) return;
+
+    const originalLabel = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = "Upload en cours...";
+
+    try {
+      const urls = [];
+      for (const file of files) {
+        urls.push(await uploadImage(file));
+      }
+
+      if (isMultiple) {
+        const textarea = document.getElementById(targetKey);
+        const existing = textarea.value.split("\n").map((s) => s.trim()).filter(Boolean);
+        textarea.value = [...existing, ...urls].join("\n");
+        textarea.dispatchEvent(new Event("input"));
+      } else {
+        const input = document.getElementById(targetKey);
+        input.value = urls[0];
+        input.dispatchEvent(new Event("input"));
+      }
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = originalLabel;
+      fileInput.value = "";
+    }
+  });
+});
+
 document.getElementById("product-images").addEventListener("input", updateImagePreview);
 document.getElementById("new-product-btn").addEventListener("click", () => openProductModal(null));
 document.getElementById("product-cancel-btn").addEventListener("click", () => {
