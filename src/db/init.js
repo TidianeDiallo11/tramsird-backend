@@ -35,6 +35,7 @@ async function initSchema() {
       category TEXT NOT NULL DEFAULT 'accessoires',
       active INTEGER NOT NULL DEFAULT 1,
       preorder INTEGER NOT NULL DEFAULT 0,
+      featured INTEGER NOT NULL DEFAULT 0,
       created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
       updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
     );
@@ -129,6 +130,8 @@ async function initSchema() {
   await pool.query(`CREATE INDEX IF NOT EXISTS idx_orders_customer ON orders(customer_id)`);
   await pool.query(`ALTER TABLE customers ADD COLUMN IF NOT EXISTS reset_token_hash TEXT`);
   await pool.query(`ALTER TABLE customers ADD COLUMN IF NOT EXISTS reset_token_expires TIMESTAMPTZ`);
+  await pool.query(`ALTER TABLE products ADD COLUMN IF NOT EXISTS featured INTEGER NOT NULL DEFAULT 0`);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_products_featured ON products(featured)`);
 }
 
 module.exports = { pool, query, one, initSchema };

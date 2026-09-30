@@ -20,6 +20,7 @@ function parseProduct(row) {
     images: JSON.parse(row.images || "[]"),
     active: !!row.active,
     preorder: !!row.preorder,
+    featured: !!row.featured,
   };
 }
 
@@ -49,7 +50,7 @@ router.get("/:id", async (req, res) => {
 });
 
 router.post("/", requireAuth, async (req, res) => {
-  const { name, tagline, description, price, colors, sizes, stock, images, category, preorder, active } = req.body;
+  const { name, tagline, description, price, colors, sizes, stock, images, category, preorder, active, featured } = req.body;
 
   if (!name || price == null) {
     return res.status(400).json({ error: "Le nom et le prix sont obligatoires." });
@@ -59,8 +60,8 @@ router.post("/", requireAuth, async (req, res) => {
   const computedStock = totalStockFromSizes(sizes);
   const id = uuidv4();
   await db.query(
-    `INSERT INTO products (id, name, tagline, description, price, colors, sizes, stock, image_url, images, category, preorder, active)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
+    `INSERT INTO products (id, name, tagline, description, price, colors, sizes, stock, image_url, images, category, preorder, active, featured)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`,
     [
       id,
       name,
@@ -75,6 +76,7 @@ router.post("/", requireAuth, async (req, res) => {
       category || "accessoires",
       preorder ? 1 : 0,
       active === false ? 0 : 1,
+      featured ? 1 : 0,
     ]
   );
 
@@ -87,7 +89,7 @@ router.put("/:id", requireAuth, async (req, res) => {
   if (!existing) return res.status(404).json({ error: "Produit introuvable." });
 
   const {
-    name, tagline, description, price, colors, sizes, stock, images, category, preorder, active,
+    name, tagline, description, price, colors, sizes, stock, images, category, preorder, active, featured,
   } = req.body;
 
   const imageList = images !== undefined ? images.filter(Boolean) : JSON.parse(existing.images || "[]");
@@ -107,8 +109,9 @@ router.put("/:id", requireAuth, async (req, res) => {
       category = $10,
       preorder = $11,
       active = $12,
+      featured = $13,
       updated_at = now()
-    WHERE id = $13`,
+    WHERE id = $14`,
     [
       name ?? existing.name,
       tagline ?? existing.tagline,
@@ -122,6 +125,7 @@ router.put("/:id", requireAuth, async (req, res) => {
       category ?? existing.category,
       preorder === undefined ? existing.preorder : (preorder ? 1 : 0),
       active === undefined ? existing.active : (active ? 1 : 0),
+      featured === undefined ? existing.featured : (featured ? 1 : 0),
       req.params.id,
     ]
   );

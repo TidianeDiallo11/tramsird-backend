@@ -151,7 +151,10 @@ async function loadProducts() {
         <td>${CATEGORY_LABELS[p.category] || p.category || "-"}</td>
         <td>${formatGNF(p.price)}</td>
         <td>${p.stock}</td>
-        <td>${p.active ? '<span class="badge badge-paid">visible</span>' : '<span class="badge badge-cancelled">masque</span>'}</td>
+        <td>
+          ${p.active ? '<span class="badge badge-paid">visible</span>' : '<span class="badge badge-cancelled">masque</span>'}
+          ${p.featured ? '<span class="badge badge-processing">accueil</span>' : ""}
+        </td>
         <td><button class="btn-secondary edit-product-btn" data-id="${p.id}">Modifier</button></td>
       </tr>
     `).join("") || `<tr><td colspan="6">Aucun produit. Clique sur "Nouveau produit" pour commencer.</td></tr>`;
@@ -200,6 +203,7 @@ function openProductModal(id) {
     document.getElementById("product-colors").value = (p.colors || []).map((c) => `${c.name}:${c.hex}`).join(",");
     document.getElementById("product-active").checked = !!p.active;
     document.getElementById("product-preorder").checked = !!p.preorder;
+    document.getElementById("product-featured").checked = !!p.featured;
 
     const sizedEntries = (p.sizes || []).filter((s) => s && typeof s === "object");
     const hasSizes = sizedEntries.length > 0;
@@ -214,6 +218,7 @@ function openProductModal(id) {
     document.getElementById("product-id").value = "";
     document.getElementById("product-active").checked = true;
     document.getElementById("product-preorder").checked = false;
+    document.getElementById("product-featured").checked = false;
     document.getElementById("product-has-sizes").checked = false;
     SIZE_LABELS.forEach((label) => {
       document.getElementById(`size-stock-${label}`).value = 0;
@@ -349,6 +354,7 @@ document.getElementById("product-form").addEventListener("submit", async (e) => 
     colors,
     active: document.getElementById("product-active").checked,
     preorder: document.getElementById("product-preorder").checked,
+    featured: document.getElementById("product-featured").checked,
   };
 
   try {
