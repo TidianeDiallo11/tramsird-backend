@@ -89,7 +89,7 @@ async function initSchema() {
     CREATE TABLE IF NOT EXISTS customers (
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
-      email TEXT UNIQUE NOT NULL,
+      email TEXT UNIQUE,
       password_hash TEXT NOT NULL,
       phone TEXT,
       address TEXT,
@@ -132,6 +132,11 @@ async function initSchema() {
   await pool.query(`ALTER TABLE customers ADD COLUMN IF NOT EXISTS reset_token_expires TIMESTAMPTZ`);
   await pool.query(`ALTER TABLE products ADD COLUMN IF NOT EXISTS featured INTEGER NOT NULL DEFAULT 0`);
   await pool.query(`CREATE INDEX IF NOT EXISTS idx_products_featured ON products(featured)`);
+  await pool.query(`ALTER TABLE customers ALTER COLUMN email DROP NOT NULL`);
+  await pool.query(`
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_customers_phone_unique
+    ON customers(phone) WHERE phone IS NOT NULL AND phone <> ''
+  `);
 }
 
 module.exports = { pool, query, one, initSchema };

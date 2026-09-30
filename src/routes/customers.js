@@ -30,43 +30,56 @@ function publicCustomer(row) {
 router.post("/register", async (req, res) => {
   const { name, email, password, phone, address } = req.body;
 
-  if (!name || !email || !password) {
-    return res.status(400).json({ error: "Nom, email et mot de passe requis." });
+  if (!name || !password) {
+    return res.status(400).json({ error: "Nom et mot de passe requis." });
   }
   if (password.length < 8) {
     return res.status(400).json({ error: "Le mot de passe doit contenir au moins 8 caracteres." });
   }
 
-  const normalizedEmail = email.toLowerCase().trim();
-  const existing = await db.one("SELECT id FROM customers WHERE email = $1", [normalizedEmail]);
-  if (existing) {
-    return res.status(400).json({ error: "Un compte existe deja avec cet email." });
+  const normalizedEmail = email ? email.toLowerCase().trim() : "";
+  const normalizedPhone = phone ? phone.trim() : "";
+  if (!normalizedEmail && !normalizedPhone) {
+    return res.status(400).json({ error: "Renseigne un email ou un numero de telephone." });
+  }
+
+  if (normalizedEmail) {
+    const existingEmail = await db.one("SELECT id FROM customers WHERE email = $1", [normalizedEmail]);
+    if (existingEmail) return res.status(400).json({ error: "Un compte existe deja avec cet email." });
+  }
+  if (normalizedPhone) {
+    const existingPhone = await db.one("SELECT id FROM customers WHERE phone = $1", [normalizedPhone]);
+    if (existingPhone) return res.status(400).json({ error: "Un compte existe deja avec ce numero." });
   }
 
   const id = uuidv4();
   const passwordHash = bcrypt.hashSync(password, 10);
   await db.query(
     `INSERT INTO customers (id, name, email, password_hash, phone, address) VALUES ($1, $2, $3, $4, $5, $6)`,
-    [id, name.trim(), normalizedEmail, passwordHash, phone || "", address || ""]
+    [id, name.trim(), normalizedEmail || null, passwordHash, normalizedPhone || null, address || ""]
   );
 
-  const token = jwt.sign({ id, email: normalizedEmail, type: "customer" }, process.env.JWT_SECRET, { expiresIn: "30d" });
+  const token = jwt.sign({ id, type: "customer" }, process.env.JWT_SECRET, { expiresIn: "30d" });
   const customer = await db.one("SELECT * FROM customers WHERE id = $1", [id]);
   res.status(201).json({ token, customer: publicCustomer(customer) });
 });
 
 router.post("/login", async (req, res) => {
-  const { email, password } = req.body;
-  if (!email || !password) {
-    return res.status(400).json({ error: "Email et mot de passe requis." });
+  const { identifier, password } = req.body;
+  if (!identifier || !password) {
+    return res.status(400).json({ error: "Email ou numero, et mot de passe requis." });
   }
 
-  const customer = await db.one("SELECT * FROM customers WHERE email = $1", [email.toLowerCase().trim()]);
+  const normalizedIdentifier = identifier.toLowerCase().trim();
+  const customer = await db.one(
+    "SELECT * FROM customers WHERE email = $1 OR phone = $2",
+    [normalizedIdentifier, identifier.trim()]
+  );
   if (!customer || !bcrypt.compareSync(password, customer.password_hash)) {
     return res.status(401).json({ error: "Identifiants incorrects." });
   }
 
-  const token = jwt.sign({ id: customer.id, email: customer.email, type: "customer" }, process.env.JWT_SECRET, { expiresIn: "30d" });
+  const token = jwt.sign({ id: customer.id, type: "customer" }, process.env.JWT_SECRET, { expiresIn: "30d" });
   res.json({ token, customer: publicCustomer(customer) });
 });
 
