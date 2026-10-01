@@ -171,6 +171,13 @@
             <label>Tableau des tailles
               <textarea rows="4" data-key="product_size_chart"></textarea>
             </label>
+            <p class="content-help">Photo du tableau des tailles (optionnelle, affichee sous le texte ci-dessus)</p>
+            <input type="hidden" id="product_size_chart_image" data-key="product_size_chart_image" />
+            <div id="product_size_chart_image-preview" class="image-preview-grid" hidden></div>
+            <div class="upload-row">
+              <button type="button" class="btn-secondary btn-upload" data-upload-target="product_size_chart_image">Uploader une photo</button>
+              <input type="file" accept="image/*" data-upload-input="product_size_chart_image" hidden />
+            </div>
             <label>Guide des tailles
               <textarea rows="3" data-key="product_size_guide"></textarea>
             </label>

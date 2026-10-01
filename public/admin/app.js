@@ -669,6 +669,7 @@ function renderSingleImagePreview(key) {
 
 document.getElementById("header_logo_url").addEventListener("input", () => renderSingleImagePreview("header_logo_url"));
 document.getElementById("hero_image_url").addEventListener("input", () => renderSingleImagePreview("hero_image_url"));
+document.getElementById("product_size_chart_image").addEventListener("input", () => renderSingleImagePreview("product_size_chart_image"));
 
 async function loadContent() {
   try {
@@ -679,6 +680,7 @@ async function loadContent() {
     });
     renderSingleImagePreview("header_logo_url");
     renderSingleImagePreview("hero_image_url");
+    renderSingleImagePreview("product_size_chart_image");
     updatePreview();
   } catch (err) {
     console.error(err);
